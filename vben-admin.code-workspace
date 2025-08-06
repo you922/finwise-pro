@@ -13,6 +13,10 @@
       "path": "apps/web-ele",
     },
     {
+      "name": "@vben/web-finance",
+      "path": "apps/web-finance",
+    },
+    {
       "name": "@vben/web-naive",
       "path": "apps/web-naive",
     },

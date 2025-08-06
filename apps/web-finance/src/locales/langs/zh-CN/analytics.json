@@ -1,0 +1,42 @@
+{
+  "title": "统计分析",
+  "overview": "概览",
+  "trends": "趋势分析",
+  "reports": "报表",
+  "reports.daily": "日报表",
+  "reports.monthly": "月报表",
+  "reports.yearly": "年报表",
+  "reports.custom": "自定义报表",
+  
+  "statistics.totalIncome": "总收入",
+  "statistics.totalExpense": "总支出",
+  "statistics.balance": "余额",
+  "statistics.transactions": "交易数",
+  "statistics.avgDaily": "日均",
+  "statistics.avgMonthly": "月均",
+  
+  "chart.incomeExpense": "收支趋势",
+  "chart.categoryDistribution": "分类分布",
+  "chart.monthlyComparison": "月度对比",
+  "chart.personAnalysis": "人员分析",
+  "chart.projectAnalysis": "项目分析",
+  
+  "period.today": "今日",
+  "period.yesterday": "昨日",
+  "period.thisWeek": "本周",
+  "period.lastWeek": "上周",
+  "period.thisMonth": "本月",
+  "period.lastMonth": "上月",
+  "period.thisQuarter": "本季度",
+  "period.lastQuarter": "上季度",
+  "period.thisYear": "今年",
+  "period.lastYear": "去年",
+  "period.custom": "自定义",
+  
+  "filter.dateRange": "日期范围",
+  "filter.category": "分类",
+  "filter.person": "人员",
+  "filter.project": "项目",
+  "filter.currency": "货币",
+  "filter.type": "类型"
+}

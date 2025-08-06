@@ -1,0 +1,150 @@
+/* 移动端全局样式优化 */
+
+/* 防止iOS橡皮筋效果 */
+@media (max-width: 768px) {
+  html,
+  body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* 移除桌面端的侧边栏和顶部导航 */
+  .vben-layout-sidebar,
+  .vben-layout-header {
+    display: none !important;
+  }
+  
+  /* 移动端内容区域全屏 */
+  .vben-layout-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100vh !important;
+  }
+  
+  /* 优化点击效果 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  
+  /* 优化输入框 */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important; /* 防止iOS自动缩放 */
+    -webkit-appearance: none;
+  }
+  
+  /* 优化按钮点击 */
+  button,
+  .ant-btn {
+    touch-action: manipulation;
+  }
+  
+  /* 优化模态框和抽屉 */
+  .ant-modal {
+    max-width: calc(100vw - 32px);
+  }
+  
+  .ant-drawer-content-wrapper {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+  }
+  
+  /* 优化表单项间距 */
+  .ant-form-item {
+    margin-bottom: 16px;
+  }
+  
+  /* 优化列表项 */
+  .ant-list-item {
+    padding: 12px;
+  }
+  
+  /* 优化卡片间距 */
+  .ant-card {
+    margin-bottom: 12px;
+  }
+  
+  /* 移动端安全区域适配 */
+  .mobile-finance,
+  .mobile-quick-add,
+  .mobile-transaction-list,
+  .mobile-statistics,
+  .mobile-budget,
+  .mobile-more {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* 浮动按钮安全区域适配 */
+  .floating-button {
+    bottom: calc(20px + env(safe-area-inset-bottom)) !important;
+  }
+  
+  /* 底部标签栏安全区域适配 */
+  .mobile-tabs .ant-tabs-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* 横屏优化 */
+@media (max-width: 768px) and (orientation: landscape) {
+  .mobile-quick-add .category-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+  
+  .mobile-statistics .overview-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* 小屏幕手机优化 */
+@media (max-width: 375px) {
+  .mobile-quick-add .category-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  
+  .mobile-statistics .overview-cards {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .mobile-budget .budget-summary {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* 动画优化 */
+@media (max-width: 768px) {
+  /* 减少动画时间 */
+  * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+  
+  /* 禁用复杂动画 */
+  .ant-progress-circle {
+    animation: none !important;
+  }
+}
+
+/* 触摸优化 */
+@media (pointer: coarse) {
+  /* 增大可点击区域 */
+  .ant-btn,
+  .menu-item,
+  .category-item,
+  .transaction-item {
+    min-height: 44px;
+  }
+  
+  /* 增大关闭按钮 */
+  .ant-modal-close,
+  .ant-drawer-close {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+  }
+}
