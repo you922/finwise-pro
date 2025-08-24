@@ -1,9 +1,8 @@
-import type { 
-  ExportParams, 
-  ImportResult, 
-  PageResult, 
-  SearchParams, 
-  Transaction 
+import type {
+  ExportParams,
+  ImportResult,
+  SearchParams,
+  Transaction,
 } from '#/types/finance';
 
 import { transactionService } from '#/api/mock/finance-service';
@@ -28,7 +27,10 @@ export async function createTransaction(data: Partial<Transaction>) {
 }
 
 // 更新交易
-export async function updateTransaction(id: string, data: Partial<Transaction>) {
+export async function updateTransaction(
+  id: string,
+  data: Partial<Transaction>,
+) {
   return transactionService.update(id, data);
 }
 

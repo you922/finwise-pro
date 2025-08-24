@@ -1,4 +1,4 @@
-import type { PageParams, PageResult, Person } from '#/types/finance';
+import type { PageParams, Person } from '#/types/finance';
 
 import { personService } from '#/api/mock/finance-service';
 

@@ -1,4 +1,4 @@
-import type { Category, PageParams, PageResult } from '#/types/finance';
+import type { Category, PageParams } from '#/types/finance';
 
 import { categoryService } from '#/api/mock/finance-service';
 

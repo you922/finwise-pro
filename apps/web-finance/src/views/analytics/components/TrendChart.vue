@@ -1,22 +1,17 @@
-<template>
-  <div class="trend-chart">
-    <div ref="chartRef" class="chart-container"></div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import type { EChartsOption } from '#/components/charts/useChart';
 import type { Transaction } from '#/types/finance';
 
 import { computed, onMounted, ref, watch } from 'vue';
 
-import { useChart } from '#/components/charts/useChart';
 import dayjs from 'dayjs';
+
+import { useChart } from '#/components/charts/useChart';
 
 interface Props {
   transactions: Transaction[];
   dateRange: [string, string];
-  groupBy?: 'day' | 'week' | 'month';
+  groupBy?: 'day' | 'month' | 'week';
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -30,19 +25,19 @@ const chartData = computed(() => {
   const [startDate, endDate] = props.dateRange;
   const start = dayjs(startDate);
   const end = dayjs(endDate);
-  
+
   // 生成日期序列
   const dates: string[] = [];
   const incomeMap = new Map<string, number>();
   const expenseMap = new Map<string, number>();
-  
+
   let current = start;
   while (current.isBefore(end) || current.isSame(end)) {
     const dateKey = getDateKey(current);
     dates.push(dateKey);
     incomeMap.set(dateKey, 0);
     expenseMap.set(dateKey, 0);
-    
+
     // 根据分组方式调整日期增量
     if (props.groupBy === 'day') {
       current = current.add(1, 'day');
@@ -52,25 +47,34 @@ const chartData = computed(() => {
       current = current.add(1, 'month');
     }
   }
-  
+
   // 统计交易数据
   props.transactions.forEach((transaction) => {
     const date = dayjs(transaction.date);
-    if (date.isAfter(start.subtract(1, 'day')) && date.isBefore(end.add(1, 'day'))) {
+    if (
+      date.isAfter(start.subtract(1, 'day')) &&
+      date.isBefore(end.add(1, 'day'))
+    ) {
       const dateKey = getDateKey(date);
-      
+
       if (transaction.type === 'income') {
-        incomeMap.set(dateKey, (incomeMap.get(dateKey) || 0) + transaction.amount);
+        incomeMap.set(
+          dateKey,
+          (incomeMap.get(dateKey) || 0) + transaction.amount,
+        );
       } else {
-        expenseMap.set(dateKey, (expenseMap.get(dateKey) || 0) + transaction.amount);
+        expenseMap.set(
+          dateKey,
+          (expenseMap.get(dateKey) || 0) + transaction.amount,
+        );
       }
     }
   });
-  
+
   return {
-    dates: dates,
-    income: dates.map(date => incomeMap.get(date) || 0),
-    expense: dates.map(date => expenseMap.get(date) || 0),
+    dates,
+    income: dates.map((date) => incomeMap.get(date) || 0),
+    expense: dates.map((date) => expenseMap.get(date) || 0),
   };
 });
 
@@ -150,6 +154,12 @@ onMounted(() => {
   setOptions(chartOptions.value);
 });
 </script>
+
+<template>
+  <div class="trend-chart">
+    <div ref="chartRef" class="chart-container"></div>
+  </div>
+</template>
 
 <style scoped>
 .trend-chart {

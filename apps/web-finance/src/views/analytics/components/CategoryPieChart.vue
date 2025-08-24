@@ -1,9 +1,3 @@
-<template>
-  <div class="category-pie-chart">
-    <div ref="chartRef" class="chart-container"></div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import type { EChartsOption } from '#/components/charts/useChart';
 import type { Category, Transaction, TransactionType } from '#/types/finance';
@@ -27,29 +21,29 @@ const chartData = computed(() => {
   // 统计各分类的金额
   const categoryMap = new Map<string, number>();
   const categoryNames = new Map<string, string>();
-  
+
   // 初始化分类名称映射
-  props.categories.forEach(cat => {
+  props.categories.forEach((cat) => {
     categoryNames.set(cat.id, cat.name);
   });
-  
+
   // 统计交易数据
   props.transactions
-    .filter(t => t.type === props.type)
-    .forEach(transaction => {
+    .filter((t) => t.type === props.type)
+    .forEach((transaction) => {
       const current = categoryMap.get(transaction.categoryId) || 0;
       categoryMap.set(transaction.categoryId, current + transaction.amount);
     });
-  
+
   // 转换为图表数据格式
-  const data = Array.from(categoryMap.entries())
+  const data = [...categoryMap.entries()]
     .map(([categoryId, amount]) => ({
       name: categoryNames.get(categoryId) || '未知分类',
       value: amount,
     }))
-    .filter(item => item.value > 0)
+    .filter((item) => item.value > 0)
     .sort((a, b) => b.value - a.value);
-  
+
   return data;
 });
 
@@ -108,6 +102,12 @@ onMounted(() => {
   setOptions(chartOptions.value);
 });
 </script>
+
+<template>
+  <div class="category-pie-chart">
+    <div ref="chartRef" class="chart-container"></div>
+  </div>
+</template>
 
 <style scoped>
 .category-pie-chart {

@@ -112,7 +112,7 @@ onMounted(() => {
           :sm="24"
         >
           <Card
-            class="cursor-pointer text-center hover:shadow-lg transition-shadow"
+            class="cursor-pointer text-center transition-shadow hover:shadow-lg"
             hoverable
             @click="item.onClick"
           >
@@ -130,16 +130,12 @@ onMounted(() => {
     <Row :gutter="16">
       <Col :lg="12" :md="24">
         <Card title="最近交易">
-          <div class="text-center text-gray-500 py-8">
-            开发中...
-          </div>
+          <div class="py-8 text-center text-gray-500">开发中...</div>
         </Card>
       </Col>
       <Col :lg="12" :md="24">
         <Card title="收支趋势">
-          <div class="text-center text-gray-500 py-8">
-            开发中...
-          </div>
+          <div class="py-8 text-center text-gray-500">开发中...</div>
         </Card>
       </Col>
     </Row>

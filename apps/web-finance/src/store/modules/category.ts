@@ -4,10 +4,10 @@ import { computed, ref } from 'vue';
 
 import { defineStore } from 'pinia';
 
-import { 
+import {
   createCategory as createCategoryApi,
   deleteCategory as deleteCategoryApi,
-  getCategoryList, 
+  getCategoryList,
   getCategoryTree,
   updateCategory as updateCategoryApi,
 } from '#/api/finance';

@@ -3,23 +3,23 @@ import type { Transaction } from '#/types/finance';
 
 import { computed, h, onMounted, onUnmounted, reactive, ref } from 'vue';
 
-import { 
-  DeleteOutlined, 
-  EditOutlined, 
+import {
+  DeleteOutlined,
+  EditOutlined,
   PlusOutlined,
   SearchOutlined,
 } from '@ant-design/icons-vue';
-import { 
-  Button, 
-  Card, 
-  DatePicker, 
-  Form, 
-  Input, 
-  message, 
-  Modal, 
-  Popconfirm, 
-  Select, 
-  Space, 
+import {
+  Button,
+  Card,
+  DatePicker,
+  Form,
+  Input,
+  message,
+  Modal,
+  Popconfirm,
+  Select,
+  Space,
   Table,
   Tag,
 } from 'ant-design-vue';
@@ -44,10 +44,10 @@ const personStore = usePersonStore();
 const loading = ref(false);
 const selectedRowKeys = ref<string[]>([]);
 const formVisible = ref(false);
-const currentTransaction = ref<Transaction | null>(null);
+const currentTransaction = ref<null | Transaction>(null);
 const searchForm = reactive({
   keyword: '',
-  type: undefined as 'income' | 'expense' | undefined,
+  type: undefined as 'expense' | 'income' | undefined,
   categoryId: undefined as string | undefined,
   currency: undefined as string | undefined,
   dateRange: [] as any[],
@@ -94,7 +94,7 @@ const columns = [
     key: 'categoryId',
     width: 120,
     customRender: ({ record }: { record: Transaction }) => {
-      const category = categories.value.find(c => c.id === record.categoryId);
+      const category = categories.value.find((c) => c.id === record.categoryId);
       return category?.name || '-';
     },
   },
@@ -105,7 +105,8 @@ const columns = [
     width: 120,
     align: 'right' as const,
     customRender: ({ record }: { record: Transaction }) => {
-      const color = record.type === 'income' ? 'text-green-600' : 'text-red-600';
+      const color =
+        record.type === 'income' ? 'text-green-600' : 'text-red-600';
       return h('span', { class: color }, `¥${record.amount.toFixed(2)}`);
     },
   },
@@ -161,19 +162,32 @@ const columns = [
     fixed: 'right' as const,
     customRender: ({ record }: { record: Transaction }) => {
       return h(Space, {}, () => [
-        h(Button, {
-          size: 'small',
-          type: 'link',
-          onClick: () => handleEdit(record)
-        }, () => [h(EditOutlined), ' 编辑']),
-        h(Popconfirm, {
-          title: '确定要删除这条记录吗？',
-          onConfirm: () => handleDelete(record.id)
-        }, () => h(Button, {
-          size: 'small',
-          type: 'link',
-          danger: true
-        }, () => [h(DeleteOutlined), ' 删除']))
+        h(
+          Button,
+          {
+            size: 'small',
+            type: 'link',
+            onClick: () => handleEdit(record),
+          },
+          () => [h(EditOutlined), ' 编辑'],
+        ),
+        h(
+          Popconfirm,
+          {
+            title: '确定要删除这条记录吗？',
+            onConfirm: () => handleDelete(record.id),
+          },
+          () =>
+            h(
+              Button,
+              {
+                size: 'small',
+                type: 'link',
+                danger: true,
+              },
+              () => [h(DeleteOutlined), ' 删除'],
+            ),
+        ),
       ]);
     },
   },
@@ -191,10 +205,14 @@ async function fetchData() {
       type: searchForm.type,
       categoryId: searchForm.categoryId,
       currency: searchForm.currency,
-      dateFrom: searchForm.dateRange[0] ? dayjs(searchForm.dateRange[0]).format('YYYY-MM-DD') : undefined,
-      dateTo: searchForm.dateRange[1] ? dayjs(searchForm.dateRange[1]).format('YYYY-MM-DD') : undefined,
+      dateFrom: searchForm.dateRange[0]
+        ? dayjs(searchForm.dateRange[0]).format('YYYY-MM-DD')
+        : undefined,
+      dateTo: searchForm.dateRange[1]
+        ? dayjs(searchForm.dateRange[1]).format('YYYY-MM-DD')
+        : undefined,
     };
-    
+
     const result = await transactionStore.fetchTransactions(params);
     pagination.total = result.total;
     console.log('交易数据加载成功，共', result.total, '条');
@@ -240,14 +258,21 @@ async function handleFormSubmit(formData: Partial<Transaction>) {
     console.log('提交交易数据:', formData);
     if (currentTransaction.value) {
       // 编辑
-      await transactionStore.updateTransaction(currentTransaction.value.id, formData);
+      await transactionStore.updateTransaction(
+        currentTransaction.value.id,
+        formData,
+      );
       message.success('更新成功');
+      // 编辑后刷新当前页
+      fetchData();
     } else {
       // 新建
       await transactionStore.createTransaction(formData);
       message.success('创建成功');
+      // 新建后跳转到第一页，以便看到新添加的记录
+      pagination.current = 1;
+      fetchData();
     }
-    fetchData();
   } catch (error: any) {
     console.error('提交失败:', error);
     message.error(error.message || '操作失败');
@@ -260,7 +285,7 @@ async function handleDelete(id: string) {
     await transactionStore.deleteTransaction(id);
     message.success('删除成功');
     fetchData();
-  } catch (error) {
+  } catch {
     message.error('删除失败');
   }
 }
@@ -271,7 +296,7 @@ async function handleBatchDelete() {
     message.warning('请先选择要删除的记录');
     return;
   }
-  
+
   Modal.confirm({
     title: '批量删除确认',
     content: `确定要删除选中的 ${selectedRowKeys.value.length} 条记录吗？`,
@@ -281,13 +306,12 @@ async function handleBatchDelete() {
         message.success('批量删除成功');
         selectedRowKeys.value = [];
         fetchData();
-      } catch (error) {
+      } catch {
         message.error('批量删除失败');
       }
     },
   });
 }
-
 
 // 表格变化
 function handleTableChange(paginationConfig: any, filters: any, sorter: any) {
@@ -309,25 +333,25 @@ function handleGlobalKeydown(e: KeyboardEvent) {
 onMounted(async () => {
   try {
     console.log('开始加载交易页面数据...');
-    
+
     // 加载基础数据
     const loadPromises = [
-      categoryStore.fetchCategories().catch(err => {
-        console.error('加载分类失败:', err);
+      categoryStore.fetchCategories().catch((error) => {
+        console.error('加载分类失败:', error);
         message.error('加载分类数据失败');
       }),
-      personStore.fetchPersons().catch(err => {
-        console.error('加载人员失败:', err);
+      personStore.fetchPersons().catch((error) => {
+        console.error('加载人员失败:', error);
         message.error('加载人员数据失败');
       }),
     ];
-    
+
     await Promise.allSettled(loadPromises);
     console.log('基础数据加载完成');
-    
+
     // 加载交易数据
     fetchData();
-    
+
     // 添加快捷键支持
     document.addEventListener('keydown', handleGlobalKeydown);
   } catch (error) {
@@ -352,7 +376,7 @@ onUnmounted(() => {
             v-model:value="searchForm.keyword"
             placeholder="请输入关键词"
             style="width: 200px"
-            @pressEnter="handleSearch"
+            @press-enter="handleSearch"
           />
         </FormItem>
         <FormItem label="类型">
@@ -360,7 +384,7 @@ onUnmounted(() => {
             v-model:value="searchForm.type"
             placeholder="请选择"
             style="width: 120px"
-            allowClear
+            allow-clear
           >
             <Select.Option value="income">收入</Select.Option>
             <Select.Option value="expense">支出</Select.Option>
@@ -371,7 +395,7 @@ onUnmounted(() => {
             v-model:value="searchForm.categoryId"
             placeholder="请选择"
             style="width: 150px"
-            allowClear
+            allow-clear
           >
             <Select.Option
               v-for="category in categories"
@@ -387,7 +411,7 @@ onUnmounted(() => {
             v-model:value="searchForm.currency"
             placeholder="请选择"
             style="width: 100px"
-            allowClear
+            allow-clear
           >
             <Select.Option value="USD">USD</Select.Option>
             <Select.Option value="CNY">CNY</Select.Option>
@@ -429,7 +453,7 @@ onUnmounted(() => {
             <DeleteOutlined />
             批量删除
           </Button>
-          
+
           <!-- 导入导出 -->
           <ImportExport />
         </Space>
@@ -437,13 +461,13 @@ onUnmounted(() => {
 
       <!-- 表格 -->
       <Table
-        v-model:selectedRowKeys="selectedRowKeys"
+        v-model:selected-row-keys="selectedRowKeys"
         :columns="columns"
-        :dataSource="transactions"
+        :data-source="transactions"
         :loading="loading"
         :pagination="pagination"
-        :rowKey="(record: Transaction) => record.id"
-        :rowSelection="{
+        :row-key="(record: Transaction) => record.id"
+        :row-selection="{
           type: 'checkbox',
           selectedRowKeys,
         }"

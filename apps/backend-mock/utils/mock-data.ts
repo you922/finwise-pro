@@ -59,23 +59,168 @@ const dashboardMenus = [
     },
     name: 'Dashboard',
     path: '/dashboard',
-    redirect: '/analytics',
+    redirect: '/workspace',
     children: [
-      {
-        name: 'Analytics',
-        path: '/analytics',
-        component: '/dashboard/analytics/index',
-        meta: {
-          affixTab: true,
-          title: 'page.dashboard.analytics',
-        },
-      },
       {
         name: 'Workspace',
         path: '/workspace',
         component: '/dashboard/workspace/index',
         meta: {
+          affixTab: true,
           title: 'page.dashboard.workspace',
+        },
+      },
+    ],
+  },
+];
+
+const analyticsMenus = [
+  {
+    meta: {
+      order: 2,
+      title: '数据分析',
+      icon: 'ant-design:bar-chart-outlined',
+    },
+    name: 'Analytics',
+    path: '/analytics',
+    redirect: '/analytics/overview',
+    children: [
+      {
+        name: 'AnalyticsOverview',
+        path: '/analytics/overview',
+        component: '/analytics/overview/index',
+        meta: {
+          title: '数据概览',
+          icon: 'ant-design:dashboard-outlined',
+        },
+      },
+      {
+        name: 'AnalyticsTrends',
+        path: '/analytics/trends',
+        component: '/analytics/trends/index',
+        meta: {
+          title: '趋势分析',
+          icon: 'ant-design:line-chart-outlined',
+        },
+      },
+      {
+        name: 'AnalyticsReports',
+        path: '/analytics/reports',
+        meta: {
+          title: '报表',
+          icon: 'ant-design:file-text-outlined',
+        },
+        children: [
+          {
+            name: 'DailyReport',
+            path: '/analytics/reports/daily',
+            component: '/analytics/reports/daily',
+            meta: {
+              title: '日报表',
+            },
+          },
+          {
+            name: 'MonthlyReport',
+            path: '/analytics/reports/monthly',
+            component: '/analytics/reports/monthly',
+            meta: {
+              title: '月报表',
+            },
+          },
+          {
+            name: 'YearlyReport',
+            path: '/analytics/reports/yearly',
+            component: '/analytics/reports/yearly',
+            meta: {
+              title: '年报表',
+            },
+          },
+          {
+            name: 'CustomReport',
+            path: '/analytics/reports/custom',
+            component: '/analytics/reports/custom',
+            meta: {
+              title: '自定义报表',
+            },
+          },
+        ],
+      },
+    ],
+  },
+];
+
+const financeMenus = [
+  {
+    meta: {
+      order: 3,
+      title: '财务管理',
+      icon: 'ant-design:dollar-circle-outlined',
+    },
+    name: 'Finance',
+    path: '/finance',
+    redirect: '/finance/dashboard',
+    children: [
+      {
+        name: 'FinanceDashboard',
+        path: '/finance/dashboard',
+        component: '/finance/dashboard/index',
+        meta: {
+          title: '财务仪表盘',
+          icon: 'ant-design:dashboard-outlined',
+        },
+      },
+      {
+        name: 'FinanceTransaction',
+        path: '/finance/transaction',
+        component: '/finance/transaction/index',
+        meta: {
+          title: '交易管理',
+          icon: 'ant-design:transaction-outlined',
+        },
+      },
+      {
+        name: 'FinanceCategory',
+        path: '/finance/category',
+        component: '/finance/category/index',
+        meta: {
+          title: '分类管理',
+          icon: 'ant-design:appstore-outlined',
+        },
+      },
+      {
+        name: 'FinancePerson',
+        path: '/finance/person',
+        component: '/finance/person/index',
+        meta: {
+          title: '人员管理',
+          icon: 'ant-design:user-outlined',
+        },
+      },
+      {
+        name: 'FinanceLoan',
+        path: '/finance/loan',
+        component: '/finance/loan/index',
+        meta: {
+          title: '贷款管理',
+          icon: 'ant-design:bank-outlined',
+        },
+      },
+      {
+        name: 'FinanceBudget',
+        path: '/finance/budget',
+        component: '/finance/budget/index',
+        meta: {
+          title: '预算管理',
+          icon: 'ant-design:wallet-outlined',
+        },
+      },
+      {
+        name: 'FinanceTag',
+        path: '/finance/tag',
+        component: '/finance/tag/index',
+        meta: {
+          title: '标签管理',
+          icon: 'ant-design:tags-outlined',
         },
       },
     ],
@@ -173,15 +318,15 @@ const createDemosMenus = (role: 'admin' | 'super' | 'user') => {
 
 export const MOCK_MENUS = [
   {
-    menus: [...dashboardMenus, ...createDemosMenus('super')],
+    menus: [...dashboardMenus, ...analyticsMenus, ...financeMenus, ...createDemosMenus('super')],
     username: 'vben',
   },
   {
-    menus: [...dashboardMenus, ...createDemosMenus('admin')],
+    menus: [...dashboardMenus, ...analyticsMenus, ...financeMenus, ...createDemosMenus('admin')],
     username: 'admin',
   },
   {
-    menus: [...dashboardMenus, ...createDemosMenus('user')],
+    menus: [...dashboardMenus, ...analyticsMenus, ...financeMenus, ...createDemosMenus('user')],
     username: 'jack',
   },
 ];

@@ -3,12 +3,13 @@
   "dashboard": "仪表板",
   "transaction": "交易管理",
   "category": "分类管理",
+  "categoryStats": "分类统计",
   "person": "人员管理",
   "loan": "贷款管理",
   "tag": "标签管理",
   "budget": "预算管理",
   "mobile": "移动端",
-  
+
   "transaction.list": "交易列表",
   "transaction.create": "新建交易",
   "transaction.edit": "编辑交易",
@@ -16,7 +17,7 @@
   "transaction.batchDelete": "批量删除",
   "transaction.export": "导出交易",
   "transaction.import": "导入交易",
-  
+
   "transaction.amount": "金额",
   "transaction.type": "类型",
   "transaction.category": "分类",
@@ -28,37 +29,37 @@
   "transaction.recorder": "记录人",
   "transaction.currency": "货币",
   "transaction.status": "状态",
-  
+
   "type.income": "收入",
   "type.expense": "支出",
-  
+
   "status.pending": "待处理",
   "status.completed": "已完成",
   "status.cancelled": "已取消",
-  
+
   "currency.USD": "美元",
   "currency.CNY": "人民币",
   "currency.THB": "泰铢",
   "currency.MMK": "缅元",
-  
+
   "category.income": "收入分类",
   "category.expense": "支出分类",
   "category.create": "新建分类",
   "category.edit": "编辑分类",
   "category.delete": "删除分类",
-  
+
   "person.list": "人员列表",
   "person.create": "新建人员",
   "person.edit": "编辑人员",
   "person.delete": "删除人员",
   "person.roles": "角色",
   "person.contact": "联系方式",
-  
+
   "role.payer": "付款人",
   "role.payee": "收款人",
   "role.borrower": "借款人",
   "role.lender": "出借人",
-  
+
   "loan.list": "贷款列表",
   "loan.create": "新建贷款",
   "loan.edit": "编辑贷款",
@@ -69,11 +70,11 @@
   "loan.dueDate": "到期日期",
   "loan.repayment": "还款记录",
   "loan.addRepayment": "添加还款",
-  
+
   "loan.status.active": "进行中",
   "loan.status.paid": "已还清",
   "loan.status.overdue": "已逾期",
-  
+
   "common.search": "搜索",
   "common.reset": "重置",
   "common.create": "新建",

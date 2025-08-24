@@ -1,34 +1,29 @@
 <script lang="ts" setup>
 import type { Loan, LoanStatus } from '#/types/finance';
 
-import { computed, h, onMounted, reactive, ref } from 'vue';
+import { computed, h, onMounted, ref } from 'vue';
 
-import { 
-  BankOutlined,
-  DeleteOutlined, 
-  DollarOutlined,
-  EditOutlined, 
+import {
+  DeleteOutlined,
+  EditOutlined,
   PlusCircleOutlined,
   PlusOutlined,
 } from '@ant-design/icons-vue';
-import { 
+import {
   Badge,
-  Button, 
-  Card, 
+  Button,
+  Card,
   Col,
   Descriptions,
   Empty,
-  message, 
-  Modal,
-  Popconfirm, 
+  message,
+  Popconfirm,
   Progress,
   Row,
   Select,
-  Space, 
-  Spin,
+  Space,
   Statistic,
   Table,
-  Tag,
   Timeline,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
@@ -49,11 +44,14 @@ const loading = ref(false);
 const loanFormVisible = ref(false);
 const repaymentFormVisible = ref(false);
 const currentLoan = ref<Loan | null>(null);
-const statusFilter = ref<LoanStatus | 'all'>('all');
+const statusFilter = ref<'all' | LoanStatus>('all');
 const expandedRowKeys = ref<string[]>([]);
 
 // 状态映射
-const statusMap: Record<LoanStatus, { text: string; color: string; status: any }> = {
+const statusMap: Record<
+  LoanStatus,
+  { color: string; status: any; text: string }
+> = {
   active: { text: '进行中', color: 'processing', status: 'processing' },
   paid: { text: '已还清', color: 'success', status: 'success' },
   overdue: { text: '已逾期', color: 'error', status: 'error' },
@@ -64,7 +62,7 @@ const loans = computed(() => {
   if (statusFilter.value === 'all') {
     return loanStore.loans;
   }
-  return loanStore.loans.filter(loan => loan.status === statusFilter.value);
+  return loanStore.loans.filter((loan) => loan.status === statusFilter.value);
 });
 
 const statistics = computed(() => loanStore.statistics);
@@ -112,11 +110,16 @@ const columns = [
     width: 120,
     customRender: ({ record }: { record: Loan }) => {
       if (!record.dueDate) return '-';
-      const isOverdue = record.status === 'overdue' || 
+      const isOverdue =
+        record.status === 'overdue' ||
         (record.status === 'active' && dayjs(record.dueDate).isBefore(dayjs()));
-      return h('span', { 
-        class: isOverdue ? 'text-red-500' : '' 
-      }, record.dueDate);
+      return h(
+        'span',
+        {
+          class: isOverdue ? 'text-red-500' : '',
+        },
+        record.dueDate,
+      );
     },
   },
   {
@@ -124,12 +127,15 @@ const columns = [
     key: 'progress',
     width: 150,
     customRender: ({ record }: { record: Loan }) => {
-      const totalRepaid = record.repayments.reduce((sum, r) => sum + r.amount, 0);
+      const totalRepaid = record.repayments.reduce(
+        (sum, r) => sum + r.amount,
+        0,
+      );
       const percent = Math.min((totalRepaid / record.amount) * 100, 100);
       return h(Progress, {
-        percent: percent,
+        percent,
         size: 'small',
-        status: record.status === 'paid' ? 'success' : 'active'
+        status: record.status === 'paid' ? 'success' : 'active',
       });
     },
   },
@@ -142,7 +148,7 @@ const columns = [
       const status = statusMap[record.status];
       return h(Badge, {
         status: status.status,
-        text: status.text
+        text: status.text,
       });
     },
   },
@@ -154,36 +160,53 @@ const columns = [
     customRender: ({ record }: { record: Loan }) => {
       return h(Space, {}, () => {
         const buttons = [];
-        
+
         if (record.status === 'active') {
           buttons.push(
-            h(Button, {
-              size: 'small',
-              type: 'link',
-              onClick: () => handleAddRepayment(record)
-            }, () => [h(PlusCircleOutlined), ' 还款'])
+            h(
+              Button,
+              {
+                size: 'small',
+                type: 'link',
+                onClick: () => handleAddRepayment(record),
+              },
+              () => [h(PlusCircleOutlined), ' 还款'],
+            ),
           );
         }
-        
+
         buttons.push(
-          h(Button, {
-            size: 'small',
-            type: 'link',
-            onClick: () => handleEdit(record)
-          }, () => [h(EditOutlined), ' 编辑'])
+          h(
+            Button,
+            {
+              size: 'small',
+              type: 'link',
+              onClick: () => handleEdit(record),
+            },
+            () => [h(EditOutlined), ' 编辑'],
+          ),
         );
-        
+
         buttons.push(
-          h(Popconfirm, {
-            title: '确定要删除这条贷款记录吗？',
-            onConfirm: () => handleDelete(record.id)
-          }, () => h(Button, {
-            size: 'small',
-            type: 'link',
-            danger: true
-          }, () => [h(DeleteOutlined), ' 删除']))
+          h(
+            Popconfirm,
+            {
+              title: '确定要删除这条贷款记录吗？',
+              onConfirm: () => handleDelete(record.id),
+            },
+            () =>
+              h(
+                Button,
+                {
+                  size: 'small',
+                  type: 'link',
+                  danger: true,
+                },
+                () => [h(DeleteOutlined), ' 删除'],
+              ),
+          ),
         );
-        
+
         return buttons;
       });
     },
@@ -195,25 +218,28 @@ const expandedRowRender = (record: Loan) => {
   if (record.repayments.length === 0) {
     return h(Empty, { description: '暂无还款记录' });
   }
-  
-  return h(Timeline, {}, () => 
-    record.repayments.map((repayment) => 
-      h(TimelineItem, { 
-        key: repayment.id, 
-        color: 'green' 
-      }, () => 
-        h(Space, {}, () => {
-          const items = [
-            h('span', {}, repayment.date),
-            h('span', {}, `还款 ¥${repayment.amount.toFixed(2)}`)
-          ];
-          if (repayment.note) {
-            items.push(h('span', {}, `(${repayment.note})`));
-          }
-          return items;
-        })
-      )
-    )
+
+  return h(Timeline, {}, () =>
+    record.repayments.map((repayment) =>
+      h(
+        TimelineItem,
+        {
+          key: repayment.id,
+          color: 'green',
+        },
+        () =>
+          h(Space, {}, () => {
+            const items = [
+              h('span', {}, repayment.date),
+              h('span', {}, `还款 ¥${repayment.amount.toFixed(2)}`),
+            ];
+            if (repayment.note) {
+              items.push(h('span', {}, `(${repayment.note})`));
+            }
+            return items;
+          }),
+      ),
+    ),
   );
 };
 
@@ -247,7 +273,7 @@ async function handleDelete(id: string) {
   try {
     await loanStore.deleteLoan(id);
     message.success('删除成功');
-  } catch (error) {
+  } catch {
     message.error('删除失败');
   }
 }
@@ -270,7 +296,7 @@ async function handleLoanFormSubmit(formData: Partial<Loan>) {
       await loanStore.createLoan(formData);
       message.success('创建成功');
     }
-  } catch (error) {
+  } catch {
     message.error('操作失败');
   }
 }
@@ -282,7 +308,7 @@ async function handleRepaymentFormSubmit(formData: any) {
       await loanStore.addRepayment(currentLoan.value.id, formData);
       message.success('还款记录添加成功');
     }
-  } catch (error) {
+  } catch {
     message.error('操作失败');
   }
 }
@@ -334,7 +360,9 @@ onMounted(() => {
             title="逾期贷款"
             :value="statistics.overdueLoans"
             suffix="笔"
-            :value-style="{ color: statistics.overdueLoans > 0 ? '#ff4d4f' : '' }"
+            :value-style="{
+              color: statistics.overdueLoans > 0 ? '#ff4d4f' : '',
+            }"
           />
         </Card>
       </Col>
@@ -362,12 +390,12 @@ onMounted(() => {
       </div>
 
       <Table
-        v-model:expandedRowKeys="expandedRowKeys"
+        v-model:expanded-row-keys="expandedRowKeys"
         :columns="columns"
-        :dataSource="loans"
+        :data-source="loans"
         :loading="loading"
-        :rowKey="(record: Loan) => record.id"
-        :expandedRowRender="expandedRowRender"
+        :row-key="(record: Loan) => record.id"
+        :expanded-row-render="expandedRowRender"
         :scroll="{ x: 1200 }"
       />
     </Card>

@@ -1,10 +1,10 @@
 import type * as echarts from 'echarts';
+
 import type { Ref } from 'vue';
 
-import { computed, nextTick, onMounted, onUnmounted, ref, unref, watch } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
 import { useDebounceFn } from '@vueuse/core';
-import * as echartCore from 'echarts/core';
 import { BarChart, LineChart, PieChart } from 'echarts/charts';
 import {
   DataZoomComponent,
@@ -14,6 +14,7 @@ import {
   ToolboxComponent,
   TooltipComponent,
 } from 'echarts/components';
+import * as echartCore from 'echarts/core';
 import { LabelLayout, UniversalTransition } from 'echarts/features';
 import { CanvasRenderer } from 'echarts/renderers';
 
@@ -37,7 +38,7 @@ export type EChartsOption = echarts.EChartsOption;
 export type EChartsInstance = echarts.ECharts;
 
 export interface UseChartOptions {
-  theme?: string | object;
+  theme?: object | string;
   initOptions?: echarts.EChartsCoreOption;
   loading?: boolean;
   loadingOptions?: object;
@@ -47,7 +48,12 @@ export function useChart(
   elRef: Ref<HTMLDivElement | null>,
   options: UseChartOptions = {},
 ) {
-  const { theme = 'light', initOptions = {}, loading = false, loadingOptions = {} } = options;
+  const {
+    theme = 'light',
+    initOptions = {},
+    loading = false,
+    loadingOptions = {},
+  } = options;
 
   let chartInstance: EChartsInstance | null = null;
   const cacheOptions = ref<EChartsOption>({});
@@ -116,15 +122,12 @@ export function useChart(
   );
 
   // 监听元素变化，重新初始化
-  watch(
-    elRef,
-    (el) => {
-      if (el) {
-        isDisposed.value = false;
-        setOptions(cacheOptions.value);
-      }
-    },
-  );
+  watch(elRef, (el) => {
+    if (el) {
+      isDisposed.value = false;
+      setOptions(cacheOptions.value);
+    }
+  });
 
   // 挂载时初始化
   onMounted(() => {

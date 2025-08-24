@@ -5,7 +5,7 @@
   "backup": "数据备份",
   "budget": "预算管理",
   "tags": "标签管理",
-  
+
   "import.title": "导入数据",
   "import.selectFile": "选择文件",
   "import.downloadTemplate": "下载模板",
@@ -17,7 +17,7 @@
   "import.result": "导入结果",
   "import.successCount": "成功条数",
   "import.failedCount": "失败条数",
-  
+
   "export.title": "导出数据",
   "export.selectType": "选择类型",
   "export.selectFields": "选择字段",
@@ -27,7 +27,7 @@
   "export.pdf": "PDF文件",
   "export.dateRange": "日期范围",
   "export.filters": "筛选条件",
-  
+
   "backup.title": "数据备份",
   "backup.create": "创建备份",
   "backup.restore": "恢复备份",
@@ -37,7 +37,7 @@
   "backup.manual": "手动备份",
   "backup.schedule": "备份计划",
   "backup.lastBackup": "最后备份",
-  
+
   "budget.title": "预算管理",
   "budget.create": "创建预算",
   "budget.edit": "编辑预算",
@@ -50,7 +50,7 @@
   "budget.remaining": "剩余",
   "budget.progress": "执行进度",
   "budget.alert": "预警设置",
-  
+
   "tags.title": "标签管理",
   "tags.create": "创建标签",
   "tags.edit": "编辑标签",

@@ -1,18 +1,31 @@
+<script setup lang="ts">
+import { ref } from 'vue';
+
+import { TabPane, Tabs } from 'ant-design-vue';
+
+import MobileBudget from './budget.vue';
+import MobileMore from './more.vue';
+import MobileStatistics from './statistics.vue';
+import TransactionList from './transaction-list.vue';
+
+const activeTab = ref('transactions');
+</script>
+
 <template>
   <div class="mobile-finance">
-    <Tabs v-model:activeKey="activeTab" class="mobile-tabs">
+    <Tabs v-model:active-key="activeTab" class="mobile-tabs">
       <TabPane key="transactions" tab="账单">
         <TransactionList />
       </TabPane>
-      
+
       <TabPane key="statistics" tab="统计">
         <MobileStatistics />
       </TabPane>
-      
+
       <TabPane key="budget" tab="预算">
         <MobileBudget />
       </TabPane>
-      
+
       <TabPane key="more" tab="更多">
         <MobileMore />
       </TabPane>
@@ -20,36 +33,24 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { Tabs, TabPane } from 'ant-design-vue';
-import { ref } from 'vue';
-
-import TransactionList from './transaction-list.vue';
-import MobileStatistics from './statistics.vue';
-import MobileBudget from './budget.vue';
-import MobileMore from './more.vue';
-
-const activeTab = ref('transactions');
-</script>
-
 <style scoped>
 .mobile-finance {
-  height: 100vh;
   display: flex;
   flex-direction: column;
+  height: 100vh;
   background: #f5f5f5;
 }
 
 .mobile-tabs {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
 }
 
 :deep(.ant-tabs-nav) {
-  background: #fff;
   margin: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
 }
 
 :deep(.ant-tabs-content) {

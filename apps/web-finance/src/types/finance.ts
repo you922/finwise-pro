@@ -1,19 +1,19 @@
 // 财务管理系统类型定义
 
 // 货币类型
-export type Currency = 'USD' | 'CNY' | 'THB' | 'MMK';
+export type Currency = 'CNY' | 'MMK' | 'THB' | 'USD';
 
 // 交易类型
-export type TransactionType = 'income' | 'expense';
+export type TransactionType = 'expense' | 'income';
 
 // 人员角色
-export type PersonRole = 'payer' | 'payee' | 'borrower' | 'lender';
+export type PersonRole = 'borrower' | 'lender' | 'payee' | 'payer';
 
 // 贷款状态
-export type LoanStatus = 'active' | 'paid' | 'overdue';
+export type LoanStatus = 'active' | 'overdue' | 'paid';
 
 // 交易状态
-export type TransactionStatus = 'pending' | 'completed' | 'cancelled';
+export type TransactionStatus = 'cancelled' | 'completed' | 'pending';
 
 // 分类
 export interface Category {
@@ -91,8 +91,8 @@ export interface Statistics {
   balance: number;
   currency: Currency;
   period?: {
-    start: string;
     end: string;
+    start: string;
   };
 }
 
@@ -122,7 +122,7 @@ export interface SearchParams extends PageParams {
   currency?: Currency;
   dateFrom?: string;
   dateTo?: string;
-  status?: TransactionStatus | LoanStatus;
+  status?: LoanStatus | TransactionStatus;
 }
 
 // 导入结果
@@ -130,14 +130,14 @@ export interface ImportResult {
   success: number;
   failed: number;
   errors: Array<{
-    row: number;
     message: string;
+    row: number;
   }>;
 }
 
 // 导出参数
 export interface ExportParams {
-  format: 'excel' | 'csv' | 'pdf';
+  format: 'csv' | 'excel' | 'pdf';
   fields?: string[];
   filters?: SearchParams;
 }

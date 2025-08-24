@@ -5,9 +5,7 @@ import { Card } from 'ant-design-vue';
 <template>
   <div class="p-4">
     <Card title="标签管理">
-      <div class="text-center text-gray-500 py-20">
-        页面开发中...
-      </div>
+      <div class="py-20 text-center text-gray-500">页面开发中...</div>
     </Card>
   </div>
 </template>

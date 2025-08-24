@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { FormInstance, Rule } from 'ant-design-vue/es/form';
+
 import type { Loan, LoanRepayment } from '#/types/finance';
 
 import { computed, reactive, ref, watch } from 'vue';
@@ -7,6 +8,15 @@ import { computed, reactive, ref, watch } from 'vue';
 import { DatePicker, Form, Input, InputNumber, Modal } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
+const props = withDefaults(defineProps<Props>(), {
+  visible: false,
+  loan: null,
+});
+// Emits
+const emit = defineEmits<{
+  submit: [Partial<LoanRepayment>];
+  'update:visible': [boolean];
+}>();
 const FormItem = Form.Item;
 const TextArea = Input.TextArea;
 
@@ -15,17 +25,6 @@ interface Props {
   visible: boolean;
   loan?: Loan | null;
 }
-
-const props = withDefaults(defineProps<Props>(), {
-  visible: false,
-  loan: null,
-});
-
-// Emits
-const emit = defineEmits<{
-  'update:visible': [boolean];
-  'submit': [Partial<LoanRepayment>];
-}>();
 
 // 表单实例
 const formRef = ref<FormInstance>();
@@ -41,7 +40,10 @@ const formData = reactive<Partial<LoanRepayment>>({
 // 计算属性
 const remainingAmount = computed(() => {
   if (!props.loan) return 0;
-  const totalRepaid = props.loan.repayments.reduce((sum, r) => sum + r.amount, 0);
+  const totalRepaid = props.loan.repayments.reduce(
+    (sum, r) => sum + r.amount,
+    0,
+  );
   return props.loan.amount - totalRepaid;
 });
 
@@ -53,7 +55,9 @@ const rules: Record<string, Rule[]> = {
     {
       validator: (rule, value) => {
         if (value > remainingAmount.value) {
-          return Promise.reject(`还款金额不能超过剩余金额 ¥${remainingAmount.value.toFixed(2)}`);
+          return Promise.reject(
+            `还款金额不能超过剩余金额 ¥${remainingAmount.value.toFixed(2)}`,
+          );
         }
         return Promise.resolve();
       },
@@ -65,18 +69,21 @@ const rules: Record<string, Rule[]> = {
 };
 
 // 监听属性变化
-watch(() => props.visible, (newVal) => {
-  if (newVal && props.loan) {
-    // 重置表单
-    formRef.value?.resetFields();
-    Object.assign(formData, {
-      amount: remainingAmount.value,
-      currency: props.loan.currency,
-      date: dayjs().format('YYYY-MM-DD'),
-      note: '',
-    });
-  }
-});
+watch(
+  () => props.visible,
+  (newVal) => {
+    if (newVal && props.loan) {
+      // 重置表单
+      formRef.value?.resetFields();
+      Object.assign(formData, {
+        amount: remainingAmount.value,
+        currency: props.loan.currency,
+        date: dayjs().format('YYYY-MM-DD'),
+        note: '',
+      });
+    }
+  },
+);
 
 // 处理取消
 function handleCancel() {
@@ -87,13 +94,13 @@ function handleCancel() {
 async function handleSubmit() {
   try {
     await formRef.value?.validateFields();
-    
+
     // 处理日期格式
     const submitData = {
       ...formData,
       date: dayjs(formData.date).format('YYYY-MM-DD'),
     };
-    
+
     emit('submit', submitData);
     emit('update:visible', false);
   } catch (error) {
@@ -114,15 +121,14 @@ async function handleSubmit() {
       <p>借款人：{{ loan.borrower }}</p>
       <p>出借人：{{ loan.lender }}</p>
       <p>贷款金额：¥{{ loan.amount.toFixed(2) }}</p>
-      <p>剩余金额：<span class="text-red-500 font-bold">¥{{ remainingAmount.toFixed(2) }}</span></p>
+      <p>
+        剩余金额：<span class="font-bold text-red-500"
+          >¥{{ remainingAmount.toFixed(2) }}</span
+        >
+      </p>
     </div>
 
-    <Form
-      ref="formRef"
-      :model="formData"
-      :rules="rules"
-      layout="vertical"
-    >
+    <Form ref="formRef" :model="formData" :rules="rules" layout="vertical">
       <FormItem label="还款金额" name="amount">
         <InputNumber
           v-model:value="formData.amount"
@@ -152,7 +158,7 @@ async function handleSubmit() {
           :rows="3"
           placeholder="请输入备注信息（可选）"
           maxlength="200"
-          showCount
+          show-count
         />
       </FormItem>
     </Form>

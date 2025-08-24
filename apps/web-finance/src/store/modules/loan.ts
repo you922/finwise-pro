@@ -1,8 +1,8 @@
-import type { 
-  Loan, 
-  LoanRepayment, 
-  LoanStatus, 
-  SearchParams 
+import type {
+  Loan,
+  LoanRepayment,
+  LoanStatus,
+  SearchParams,
 } from '#/types/finance';
 
 import { computed, ref } from 'vue';
@@ -87,7 +87,10 @@ export const useLoanStore = defineStore('finance-loan', () => {
   }
 
   // 添加还款记录
-  async function addRepayment(loanId: string, repayment: Partial<LoanRepayment>) {
+  async function addRepayment(
+    loanId: string,
+    repayment: Partial<LoanRepayment>,
+  ) {
     const updatedLoan = await addRepaymentApi(loanId, repayment);
     const index = loans.value.findIndex((l) => l.id === loanId);
     if (index !== -1) {

@@ -1,13 +1,3 @@
-<template>
-  <div class="responsive-wrapper">
-    <!-- 移动端视图 -->
-    <MobileFinance v-if="isMobile" />
-    
-    <!-- 桌面端视图 -->
-    <slot v-else></slot>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
 
@@ -29,9 +19,19 @@ onUnmounted(() => {
 });
 </script>
 
+<template>
+  <div class="responsive-wrapper">
+    <!-- 移动端视图 -->
+    <MobileFinance v-if="isMobile" />
+
+    <!-- 桌面端视图 -->
+    <slot v-else></slot>
+  </div>
+</template>
+
 <style scoped>
 .responsive-wrapper {
-  height: 100%;
   width: 100%;
+  height: 100%;
 }
 </style>

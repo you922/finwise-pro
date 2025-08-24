@@ -1,10 +1,5 @@
 // 数据迁移工具 - 从旧的 localStorage 迁移到 IndexedDB
-import type { 
-  Category, 
-  Loan, 
-  Person, 
-  Transaction 
-} from '#/types/finance';
+import type { Category, Loan, Person, Transaction } from '#/types/finance';
 
 import { importDatabase } from './db';
 
@@ -18,12 +13,12 @@ const OLD_STORAGE_KEYS = {
 
 // 生成新的 ID
 function generateNewId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
 // 迁移分类数据
 function migrateCategories(oldCategories: any[]): Category[] {
-  return oldCategories.map(cat => ({
+  return oldCategories.map((cat) => ({
     id: cat.id || generateNewId(),
     name: cat.name,
     type: cat.type,
@@ -34,7 +29,7 @@ function migrateCategories(oldCategories: any[]): Category[] {
 
 // 迁移人员数据
 function migratePersons(oldPersons: any[]): Person[] {
-  return oldPersons.map(person => ({
+  return oldPersons.map((person) => ({
     id: person.id || generateNewId(),
     name: person.name,
     roles: person.roles || [],
@@ -46,7 +41,7 @@ function migratePersons(oldPersons: any[]): Person[] {
 
 // 迁移交易数据
 function migrateTransactions(oldTransactions: any[]): Transaction[] {
-  return oldTransactions.map(trans => ({
+  return oldTransactions.map((trans) => ({
     id: trans.id || generateNewId(),
     amount: Number(trans.amount) || 0,
     type: trans.type,
@@ -66,7 +61,7 @@ function migrateTransactions(oldTransactions: any[]): Transaction[] {
 
 // 迁移贷款数据
 function migrateLoans(oldLoans: any[]): Loan[] {
-  return oldLoans.map(loan => ({
+  return oldLoans.map((loan) => ({
     id: loan.id || generateNewId(),
     borrower: loan.borrower,
     lender: loan.lender,
@@ -94,26 +89,26 @@ function readOldData<T>(key: string): T[] {
 
 // 执行数据迁移
 export async function migrateData(): Promise<{
-  success: boolean;
-  message: string;
   details?: any;
+  message: string;
+  success: boolean;
 }> {
   try {
     console.log('开始数据迁移...');
-    
+
     // 读取旧数据
     const oldCategories = readOldData<any>(OLD_STORAGE_KEYS.CATEGORIES);
     const oldPersons = readOldData<any>(OLD_STORAGE_KEYS.PERSONS);
     const oldTransactions = readOldData<any>(OLD_STORAGE_KEYS.TRANSACTIONS);
     const oldLoans = readOldData<any>(OLD_STORAGE_KEYS.LOANS);
-    
+
     console.log('读取到的旧数据：', {
       categories: oldCategories.length,
       persons: oldPersons.length,
       transactions: oldTransactions.length,
       loans: oldLoans.length,
     });
-    
+
     // 如果没有旧数据，则不需要迁移
     if (
       oldCategories.length === 0 &&
@@ -126,13 +121,13 @@ export async function migrateData(): Promise<{
         message: '没有需要迁移的数据',
       };
     }
-    
+
     // 转换数据格式
     const categories = migrateCategories(oldCategories);
     const persons = migratePersons(oldPersons);
     const transactions = migrateTransactions(oldTransactions);
     const loans = migrateLoans(oldLoans);
-    
+
     // 导入到新系统
     await importDatabase({
       categories,
@@ -140,13 +135,13 @@ export async function migrateData(): Promise<{
       transactions,
       loans,
     });
-    
+
     // 迁移成功后，可以选择清除旧数据
     // localStorage.removeItem(OLD_STORAGE_KEYS.CATEGORIES);
     // localStorage.removeItem(OLD_STORAGE_KEYS.PERSONS);
     // localStorage.removeItem(OLD_STORAGE_KEYS.TRANSACTIONS);
     // localStorage.removeItem(OLD_STORAGE_KEYS.LOANS);
-    
+
     return {
       success: true,
       message: '数据迁移成功',
@@ -169,11 +164,11 @@ export async function migrateData(): Promise<{
 
 // 检查是否需要迁移
 export function needsMigration(): boolean {
-  const hasOldData = 
+  const hasOldData =
     localStorage.getItem(OLD_STORAGE_KEYS.CATEGORIES) ||
     localStorage.getItem(OLD_STORAGE_KEYS.PERSONS) ||
     localStorage.getItem(OLD_STORAGE_KEYS.TRANSACTIONS) ||
     localStorage.getItem(OLD_STORAGE_KEYS.LOANS);
-  
+
   return !!hasOldData;
 }

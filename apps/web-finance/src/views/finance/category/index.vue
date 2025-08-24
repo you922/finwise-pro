@@ -3,17 +3,17 @@ import type { Category } from '#/types/finance';
 
 import { computed, h, onMounted, ref } from 'vue';
 
-import { 
-  DeleteOutlined, 
-  EditOutlined, 
+import {
+  DeleteOutlined,
+  EditOutlined,
   PlusOutlined,
 } from '@ant-design/icons-vue';
-import { 
-  Button, 
-  Card, 
-  message, 
-  Popconfirm, 
-  Space, 
+import {
+  Button,
+  Card,
+  message,
+  Popconfirm,
+  Space,
   Table,
   Tabs,
   Tag,
@@ -32,7 +32,7 @@ const categoryStore = useCategoryStore();
 const loading = ref(false);
 const formVisible = ref(false);
 const currentCategory = ref<Category | null>(null);
-const activeTab = ref<'income' | 'expense'>('income');
+const activeTab = ref<'expense' | 'income'>('income');
 
 // 计算属性
 const categories = computed(() => categoryStore.categories);
@@ -41,7 +41,9 @@ const expenseCategories = computed(() => categoryStore.expenseCategories);
 
 // 当前显示的分类
 const displayCategories = computed(() => {
-  return activeTab.value === 'income' ? incomeCategories.value : expenseCategories.value;
+  return activeTab.value === 'income'
+    ? incomeCategories.value
+    : expenseCategories.value;
 });
 
 // 表格列配置
@@ -74,20 +76,33 @@ const columns = [
     width: 150,
     customRender: ({ record }: { record: Category }) => {
       return h(Space, {}, () => [
-        h(Button, {
-          size: 'small',
-          type: 'link',
-          onClick: () => handleEdit(record)
-        }, () => [h(EditOutlined), ' 编辑']),
-        h(Popconfirm, {
-          title: '确定要删除这个分类吗？',
-          placement: 'topRight',
-          onConfirm: () => handleDelete(record.id)
-        }, () => h(Button, {
-          size: 'small',
-          type: 'link',
-          danger: true
-        }, () => [h(DeleteOutlined), ' 删除']))
+        h(
+          Button,
+          {
+            size: 'small',
+            type: 'link',
+            onClick: () => handleEdit(record),
+          },
+          () => [h(EditOutlined), ' 编辑'],
+        ),
+        h(
+          Popconfirm,
+          {
+            title: '确定要删除这个分类吗？',
+            placement: 'topRight',
+            onConfirm: () => handleDelete(record.id),
+          },
+          () =>
+            h(
+              Button,
+              {
+                size: 'small',
+                type: 'link',
+                danger: true,
+              },
+              () => [h(DeleteOutlined), ' 删除'],
+            ),
+        ),
       ]);
     },
   },
@@ -120,7 +135,7 @@ async function handleDelete(id: string) {
   try {
     await categoryStore.deleteCategory(id);
     message.success('删除成功');
-  } catch (error) {
+  } catch {
     message.error('删除失败');
   }
 }
@@ -140,7 +155,7 @@ async function handleFormSubmit(formData: Partial<Category>) {
       });
       message.success('创建成功');
     }
-  } catch (error) {
+  } catch {
     message.error('操作失败');
   }
 }
@@ -161,21 +176,21 @@ onMounted(() => {
         </Button>
       </div>
 
-      <Tabs v-model:activeKey="activeTab">
+      <Tabs v-model:active-key="activeTab">
         <TabPane key="income" tab="收入分类">
           <Table
             :columns="columns"
-            :dataSource="incomeCategories"
+            :data-source="incomeCategories"
             :loading="loading"
-            :rowKey="(record: Category) => record.id"
+            :row-key="(record: Category) => record.id"
           />
         </TabPane>
         <TabPane key="expense" tab="支出分类">
           <Table
             :columns="columns"
-            :dataSource="expenseCategories"
+            :data-source="expenseCategories"
             :loading="loading"
-            :rowKey="(record: Category) => record.id"
+            :row-key="(record: Category) => record.id"
           />
         </TabPane>
       </Tabs>
@@ -185,7 +200,7 @@ onMounted(() => {
     <CategoryForm
       v-model:visible="formVisible"
       :category="currentCategory"
-      :defaultType="activeTab"
+      :default-type="activeTab"
       @submit="handleFormSubmit"
     />
   </div>

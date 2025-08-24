@@ -1,29 +1,28 @@
 <script lang="ts" setup>
 import type { Person, PersonRole } from '#/types/finance';
 
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
-import { 
-  DeleteOutlined, 
-  EditOutlined, 
+import {
+  DeleteOutlined,
+  EditOutlined,
   PhoneOutlined,
   PlusOutlined,
   SearchOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue';
-import { 
+import {
   Avatar,
-  Button, 
-  Card, 
+  Button,
+  Card,
   Col,
   Descriptions,
   Empty,
   Input,
-  List,
-  message, 
-  Popconfirm, 
+  message,
+  Popconfirm,
   Row,
-  Space, 
+  Space,
   Spin,
   Tag,
 } from 'ant-design-vue';
@@ -40,12 +39,12 @@ const personStore = usePersonStore();
 // 状态
 const loading = ref(false);
 const formVisible = ref(false);
-const currentPerson = ref<Person | null>(null);
+const currentPerson = ref<null | Person>(null);
 const viewMode = ref<'card' | 'list'>('card');
 const searchKeyword = ref('');
 
 // 角色映射
-const roleMap: Record<PersonRole, { text: string; color: string }> = {
+const roleMap: Record<PersonRole, { color: string; text: string }> = {
   payer: { text: '付款人', color: 'blue' },
   payee: { text: '收款人', color: 'green' },
   borrower: { text: '借款人', color: 'orange' },
@@ -58,10 +57,11 @@ const persons = computed(() => {
     return personStore.persons;
   }
   const keyword = searchKeyword.value.toLowerCase();
-  return personStore.persons.filter(person =>
-    person.name.toLowerCase().includes(keyword) ||
-    person.contact?.toLowerCase().includes(keyword) ||
-    person.description?.toLowerCase().includes(keyword)
+  return personStore.persons.filter(
+    (person) =>
+      person.name.toLowerCase().includes(keyword) ||
+      person.contact?.toLowerCase().includes(keyword) ||
+      person.description?.toLowerCase().includes(keyword),
   );
 });
 
@@ -92,7 +92,7 @@ async function handleDelete(id: string) {
   try {
     await personStore.deletePerson(id);
     message.success('删除成功');
-  } catch (error) {
+  } catch {
     message.error('删除失败');
   }
 }
@@ -109,7 +109,7 @@ async function handleFormSubmit(formData: Partial<Person>) {
       await personStore.createPerson(formData);
       message.success('创建成功');
     }
-  } catch (error) {
+  } catch {
     message.error('操作失败');
   }
 }
@@ -129,7 +129,7 @@ onMounted(() => {
           <Input
             v-model:value="searchKeyword"
             placeholder="搜索人员姓名、联系方式或描述"
-            allowClear
+            allow-clear
           >
             <template #prefix>
               <SearchOutlined />
@@ -170,11 +170,7 @@ onMounted(() => {
             </template>
             <template #extra>
               <Space>
-                <Button
-                  size="small"
-                  type="text"
-                  @click="handleEdit(person)"
-                >
+                <Button size="small" type="text" @click="handleEdit(person)">
                   <EditOutlined />
                 </Button>
                 <Popconfirm
@@ -182,11 +178,7 @@ onMounted(() => {
                   placement="topRight"
                   @confirm="() => handleDelete(person.id)"
                 >
-                  <Button
-                    size="small"
-                    type="text"
-                    danger
-                  >
+                  <Button size="small" type="text" danger>
                     <DeleteOutlined />
                   </Button>
                 </Popconfirm>

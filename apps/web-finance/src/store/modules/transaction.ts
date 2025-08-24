@@ -1,9 +1,8 @@
-import type { 
-  ExportParams, 
-  ImportResult, 
-  PageResult, 
-  SearchParams, 
-  Transaction 
+import type {
+  ExportParams,
+  ImportResult,
+  SearchParams,
+  Transaction,
 } from '#/types/finance';
 
 import { ref } from 'vue';
@@ -24,7 +23,7 @@ import {
 export const useTransactionStore = defineStore('finance-transaction', () => {
   // 状态
   const transactions = ref<Transaction[]>([]);
-  const currentTransaction = ref<Transaction | null>(null);
+  const currentTransaction = ref<null | Transaction>(null);
   const loading = ref(false);
   const pageInfo = ref({
     total: 0,
@@ -66,7 +65,8 @@ export const useTransactionStore = defineStore('finance-transaction', () => {
   // 创建交易
   async function createTransaction(data: Partial<Transaction>) {
     const newTransaction = await createTransactionApi(data);
-    transactions.value.unshift(newTransaction);
+    // 不在这里更新列表，让页面重新获取数据以确保排序正确
+    // transactions.value.unshift(newTransaction);
     return newTransaction;
   }
 
@@ -118,7 +118,7 @@ export const useTransactionStore = defineStore('finance-transaction', () => {
   }
 
   // 设置当前交易
-  function setCurrentTransaction(transaction: Transaction | null) {
+  function setCurrentTransaction(transaction: null | Transaction) {
     currentTransaction.value = transaction;
   }
 

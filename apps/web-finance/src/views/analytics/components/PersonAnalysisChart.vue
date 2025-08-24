@@ -1,9 +1,3 @@
-<template>
-  <div class="person-analysis-chart">
-    <div ref="chartRef" class="chart-container"></div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import type { EChartsOption } from '#/components/charts/useChart';
 import type { Person, Transaction } from '#/types/finance';
@@ -26,37 +20,43 @@ const chartRef = ref<HTMLDivElement | null>(null);
 const { setOptions } = useChart(chartRef);
 
 const chartData = computed(() => {
-  const personMap = new Map<string, { income: number; expense: number }>();
+  const personMap = new Map<string, { expense: number; income: number }>();
   const personNames = new Map<string, string>();
-  
+
   // 初始化人员名称映射
-  props.persons.forEach(person => {
+  props.persons.forEach((person) => {
     personNames.set(person.name, person.name);
   });
-  
+
   // 统计交易数据
-  props.transactions.forEach(transaction => {
+  props.transactions.forEach((transaction) => {
     // 统计付款人数据
     if (transaction.payer) {
-      const current = personMap.get(transaction.payer) || { income: 0, expense: 0 };
+      const current = personMap.get(transaction.payer) || {
+        income: 0,
+        expense: 0,
+      };
       if (transaction.type === 'expense') {
         current.expense += transaction.amount;
       }
       personMap.set(transaction.payer, current);
     }
-    
+
     // 统计收款人数据
     if (transaction.payee) {
-      const current = personMap.get(transaction.payee) || { income: 0, expense: 0 };
+      const current = personMap.get(transaction.payee) || {
+        income: 0,
+        expense: 0,
+      };
       if (transaction.type === 'income') {
         current.income += transaction.amount;
       }
       personMap.set(transaction.payee, current);
     }
   });
-  
+
   // 计算总金额并排序
-  const sortedData = Array.from(personMap.entries())
+  const sortedData = [...personMap.entries()]
     .map(([name, data]) => ({
       name,
       income: data.income,
@@ -65,17 +65,17 @@ const chartData = computed(() => {
     }))
     .sort((a, b) => b.total - a.total)
     .slice(0, props.limit);
-  
+
   return {
-    names: sortedData.map(item => item.name),
-    income: sortedData.map(item => item.income),
-    expense: sortedData.map(item => item.expense),
+    names: sortedData.map((item) => item.name),
+    income: sortedData.map((item) => item.income),
+    expense: sortedData.map((item) => item.expense),
   };
 });
 
 const chartOptions = computed<EChartsOption>(() => ({
   title: {
-    text: '人员交易统计（前' + props.limit + '名）',
+    text: `人员交易统计（前${props.limit}名）`,
     left: 'center',
   },
   tooltip: {
@@ -148,6 +148,12 @@ onMounted(() => {
   setOptions(chartOptions.value);
 });
 </script>
+
+<template>
+  <div class="person-analysis-chart">
+    <div ref="chartRef" class="chart-container"></div>
+  </div>
+</template>
 
 <style scoped>
 .person-analysis-chart {

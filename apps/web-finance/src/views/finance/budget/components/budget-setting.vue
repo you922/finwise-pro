@@ -1,119 +1,22 @@
-<template>
-  <div class="budget-setting">
-    <Modal
-      v-model:open="visible"
-      :title="title"
-      width="500px"
-      @ok="handleSubmit"
-      @cancel="handleCancel"
-    >
-      <Form ref="formRef" :model="formData" :rules="rules" layout="vertical">
-        <FormItem label="分类" name="categoryId">
-          <Select
-            v-model:value="formData.categoryId"
-            placeholder="选择分类"
-            :disabled="!!budget"
-          >
-            <SelectOption
-              v-for="category in expenseCategories"
-              :key="category.id"
-              :value="category.id"
-              :disabled="isCategoryBudgetExists(category.id)"
-            >
-              {{ category.icon }} {{ category.name }}
-              <span v-if="isCategoryBudgetExists(category.id)" style="color: #999">
-                (已设置预算)
-              </span>
-            </SelectOption>
-          </Select>
-        </FormItem>
-        
-        <Row :gutter="16">
-          <Col :span="12">
-            <FormItem label="预算周期" name="period">
-              <Select
-                v-model:value="formData.period"
-                @change="handlePeriodChange"
-              >
-                <SelectOption value="monthly">月度预算</SelectOption>
-                <SelectOption value="yearly">年度预算</SelectOption>
-              </Select>
-            </FormItem>
-          </Col>
-          <Col :span="12">
-            <FormItem label="预算金额" name="amount">
-              <InputNumber
-                v-model:value="formData.amount"
-                :min="0"
-                :precision="2"
-                placeholder="输入预算金额"
-                style="width: 100%"
-                :formatter="value => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
-                :parser="value => value.replace(/\¥\s?|(,*)/g, '')"
-              />
-            </FormItem>
-          </Col>
-        </Row>
-        
-        <Row :gutter="16">
-          <Col :span="12">
-            <FormItem label="年份" name="year">
-              <Select v-model:value="formData.year">
-                <SelectOption
-                  v-for="year in yearOptions"
-                  :key="year"
-                  :value="year"
-                >
-                  {{ year }}年
-                </SelectOption>
-              </Select>
-            </FormItem>
-          </Col>
-          <Col :span="12" v-if="formData.period === 'monthly'">
-            <FormItem label="月份" name="month">
-              <Select v-model:value="formData.month">
-                <SelectOption
-                  v-for="month in 12"
-                  :key="month"
-                  :value="month"
-                >
-                  {{ month }}月
-                </SelectOption>
-              </Select>
-            </FormItem>
-          </Col>
-        </Row>
-        
-        <FormItem label="货币" name="currency">
-          <Select v-model:value="formData.currency">
-            <SelectOption value="USD">USD ($)</SelectOption>
-            <SelectOption value="CNY">CNY (¥)</SelectOption>
-            <SelectOption value="THB">THB (฿)</SelectOption>
-            <SelectOption value="MMK">MMK (K)</SelectOption>
-          </Select>
-        </FormItem>
-      </Form>
-    </Modal>
-  </div>
-</template>
-
 <script setup lang="ts">
-import type { Budget } from '#/types/finance';
 import type { FormInstance, Rule } from 'ant-design-vue';
+
+import type { Budget } from '#/types/finance';
+
+import { computed, ref, watch } from 'vue';
 
 import {
   Col,
   Form,
   FormItem,
   InputNumber,
+  message,
   Modal,
   Row,
   Select,
   SelectOption,
-  message,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
-import { computed, ref, watch } from 'vue';
 
 import { useBudgetStore } from '#/store/modules/budget';
 import { useCategoryStore } from '#/store/modules/category';
@@ -129,8 +32,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
+  success: [];
   'update:visible': [value: boolean];
-  'success': [];
 }>();
 
 const budgetStore = useBudgetStore();
@@ -158,10 +61,10 @@ const rules: Record<string, Rule[]> = {
   month: [{ required: true, message: '请选择月份' }],
 };
 
-const title = computed(() => props.budget ? '编辑预算' : '设置预算');
+const title = computed(() => (props.budget ? '编辑预算' : '设置预算'));
 
 const expenseCategories = computed(() =>
-  categoryStore.categories.filter((c) => c.type === 'expense')
+  categoryStore.categories.filter((c) => c.type === 'expense'),
 );
 
 const yearOptions = computed(() => {
@@ -182,27 +85,27 @@ const isCategoryBudgetExists = (categoryId: string) => {
     categoryId,
     formData.value.year,
     formData.value.period,
-    formData.value.period === 'monthly' ? formData.value.month : undefined
+    formData.value.period === 'monthly' ? formData.value.month : undefined,
   );
 };
 
 const handlePeriodChange = () => {
-  if (formData.value.period === 'yearly') {
-    formData.value.month = undefined as any;
-  } else {
-    formData.value.month = dayjs().month() + 1;
-  }
+  formData.value.month =
+    formData.value.period === 'yearly'
+      ? (undefined as any)
+      : dayjs().month() + 1;
 };
 
 const handleSubmit = async () => {
   try {
     await formRef.value?.validate();
-    
+
     const data = {
       ...formData.value,
-      month: formData.value.period === 'monthly' ? formData.value.month : undefined,
+      month:
+        formData.value.period === 'monthly' ? formData.value.month : undefined,
     };
-    
+
     if (props.budget) {
       await budgetStore.updateBudget(props.budget.id, data);
       message.success('预算更新成功');
@@ -210,7 +113,7 @@ const handleSubmit = async () => {
       await budgetStore.createBudget(data);
       message.success('预算设置成功');
     }
-    
+
     emit('success');
     visible.value = false;
   } catch (error) {
@@ -229,26 +132,124 @@ watch(
   () => props.visible,
   (newVal) => {
     if (newVal) {
-      if (props.budget) {
-        formData.value = {
-          categoryId: props.budget.categoryId,
-          amount: props.budget.amount,
-          currency: props.budget.currency,
-          period: props.budget.period,
-          year: props.budget.year,
-          month: props.budget.month || dayjs().month() + 1,
-        };
-      } else {
-        formData.value = {
-          categoryId: '',
-          amount: 0,
-          currency: 'CNY',
-          period: 'monthly',
-          year: dayjs().year(),
-          month: dayjs().month() + 1,
-        };
-      }
+      formData.value = props.budget
+        ? {
+            categoryId: props.budget.categoryId,
+            amount: props.budget.amount,
+            currency: props.budget.currency,
+            period: props.budget.period,
+            year: props.budget.year,
+            month: props.budget.month || dayjs().month() + 1,
+          }
+        : {
+            categoryId: '',
+            amount: 0,
+            currency: 'CNY',
+            period: 'monthly',
+            year: dayjs().year(),
+            month: dayjs().month() + 1,
+          };
     }
-  }
+  },
 );
 </script>
+
+<template>
+  <div class="budget-setting">
+    <Modal
+      v-model:open="visible"
+      :title="title"
+      width="500px"
+      @ok="handleSubmit"
+      @cancel="handleCancel"
+    >
+      <Form ref="formRef" :model="formData" :rules="rules" layout="vertical">
+        <FormItem label="分类" name="categoryId">
+          <Select
+            v-model:value="formData.categoryId"
+            placeholder="选择分类"
+            :disabled="!!budget"
+          >
+            <SelectOption
+              v-for="category in expenseCategories"
+              :key="category.id"
+              :value="category.id"
+              :disabled="isCategoryBudgetExists(category.id)"
+            >
+              {{ category.icon }} {{ category.name }}
+              <span
+                v-if="isCategoryBudgetExists(category.id)"
+                style="color: #999"
+              >
+                (已设置预算)
+              </span>
+            </SelectOption>
+          </Select>
+        </FormItem>
+
+        <Row :gutter="16">
+          <Col :span="12">
+            <FormItem label="预算周期" name="period">
+              <Select
+                v-model:value="formData.period"
+                @change="handlePeriodChange"
+              >
+                <SelectOption value="monthly">月度预算</SelectOption>
+                <SelectOption value="yearly">年度预算</SelectOption>
+              </Select>
+            </FormItem>
+          </Col>
+          <Col :span="12">
+            <FormItem label="预算金额" name="amount">
+              <InputNumber
+                v-model:value="formData.amount"
+                :min="0"
+                :precision="2"
+                placeholder="输入预算金额"
+                style="width: 100%"
+                :formatter="
+                  (value) => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                "
+                :parser="(value) => value.replace(/\¥\s?|(,*)/g, '')"
+              />
+            </FormItem>
+          </Col>
+        </Row>
+
+        <Row :gutter="16">
+          <Col :span="12">
+            <FormItem label="年份" name="year">
+              <Select v-model:value="formData.year">
+                <SelectOption
+                  v-for="year in yearOptions"
+                  :key="year"
+                  :value="year"
+                >
+                  {{ year }}年
+                </SelectOption>
+              </Select>
+            </FormItem>
+          </Col>
+          <Col :span="12" v-if="formData.period === 'monthly'">
+            <FormItem label="月份" name="month">
+              <Select v-model:value="formData.month">
+                <SelectOption v-for="month in 12" :key="month" :value="month">
+                  {{ month }}月
+                </SelectOption>
+              </Select>
+            </FormItem>
+          </Col>
+        </Row>
+
+        <FormItem label="货币" name="currency">
+          <Select v-model:value="formData.currency">
+            <SelectOption value="USD">USD ($)</SelectOption>
+            <SelectOption value="CNY">CNY (¥)</SelectOption>
+            <SelectOption value="THB">THB (฿)</SelectOption>
+            <SelectOption value="MMK">MMK (K)</SelectOption>
+          </Select>
+        </FormItem>
+      </Form>
+    </Modal>
+  </div>
+</template>

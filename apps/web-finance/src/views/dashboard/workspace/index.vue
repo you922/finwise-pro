@@ -244,7 +244,11 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
 
     <div class="mt-5 flex flex-col lg:flex-row">
       <div class="mr-4 w-full lg:w-3/5">
-        <WorkbenchProject :items="projectItems" title="财务模块" @click="navTo" />
+        <WorkbenchProject
+          :items="projectItems"
+          title="财务模块"
+          @click="navTo"
+        />
         <WorkbenchTrends :items="trendItems" class="mt-5" title="最新动态" />
       </div>
       <div class="w-full lg:w-2/5">

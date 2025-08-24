@@ -1,175 +1,25 @@
-<template>
-  <div class="mobile-budget">
-    <!-- 月份选择 -->
-    <div class="month-selector">
-      <Button type="text" @click="changeMonth(-1)">
-        <LeftOutlined />
-      </Button>
-      <DatePicker
-        v-model:value="selectedMonth"
-        picker="month"
-        format="YYYY年MM月"
-        style="flex: 1; text-align: center"
-        :bordered="false"
-        @change="fetchBudgetData"
-      />
-      <Button type="text" @click="changeMonth(1)">
-        <RightOutlined />
-      </Button>
-    </div>
-    
-    <!-- 预算总览 -->
-    <div class="budget-summary">
-      <div class="summary-chart">
-        <Progress
-          type="circle"
-          :percent="budgetProgress"
-          :strokeColor="progressColor"
-          :format="formatProgress"
-        />
-      </div>
-      <div class="summary-info">
-        <div class="info-item">
-          <span class="label">预算总额</span>
-          <span class="value">¥{{ totalBudget.toFixed(2) }}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">已使用</span>
-          <span class="value expense">¥{{ totalSpent.toFixed(2) }}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">剩余</span>
-          <span class="value" :class="{ danger: totalRemaining < 0 }">
-            ¥{{ Math.abs(totalRemaining).toFixed(2) }}
-          </span>
-        </div>
-      </div>
-    </div>
-    
-    <!-- 分类预算列表 -->
-    <div class="budget-list">
-      <div v-for="stat in budgetStats" :key="stat.budget.id" class="budget-item">
-        <div class="budget-header">
-          <div class="category-info">
-            <span class="category-icon">{{ getCategoryIcon(stat.budget.categoryId) }}</span>
-            <span class="category-name">{{ getCategoryName(stat.budget.categoryId) }}</span>
-          </div>
-          <div class="budget-actions">
-            <Button type="text" size="small" @click="showBudgetDetail(stat)">
-              详情
-            </Button>
-          </div>
-        </div>
-        
-        <div class="budget-progress">
-          <div class="progress-info">
-            <span class="spent">¥{{ stat.spent.toFixed(2) }}</span>
-            <span class="total">/ ¥{{ stat.budget.amount.toFixed(2) }}</span>
-          </div>
-          <Progress
-            :percent="stat.percentage"
-            :strokeColor="getProgressColor(stat.percentage)"
-            :showInfo="false"
-            size="small"
-          />
-          <div class="progress-footer">
-            <span class="remaining">
-              剩余 ¥{{ Math.max(0, stat.remaining).toFixed(2) }}
-            </span>
-            <span class="percentage">{{ stat.percentage }}%</span>
-          </div>
-        </div>
-      </div>
-      
-      <!-- 添加预算按钮 -->
-      <div class="add-budget-card" @click="showBudgetSetting(null)">
-        <PlusOutlined />
-        <span>设置预算</span>
-      </div>
-    </div>
-    
-    <!-- 预算详情抽屉 -->
-    <Drawer
-      v-model:open="detailDrawerVisible"
-      :title="`${selectedCategoryName} - 预算详情`"
-      placement="bottom"
-      :height="'70%'"
-    >
-      <div v-if="selectedBudgetStat" class="budget-detail">
-        <!-- 预算信息 -->
-        <div class="detail-section">
-          <h4>预算信息</h4>
-          <div class="detail-item">
-            <span class="label">预算金额</span>
-            <span class="value">¥{{ selectedBudgetStat.budget.amount.toFixed(2) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">已使用</span>
-            <span class="value">¥{{ selectedBudgetStat.spent.toFixed(2) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">剩余</span>
-            <span class="value" :class="{ danger: selectedBudgetStat.remaining < 0 }">
-              ¥{{ Math.abs(selectedBudgetStat.remaining).toFixed(2) }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <span class="label">交易笔数</span>
-            <span class="value">{{ selectedBudgetStat.transactions }} 笔</span>
-          </div>
-        </div>
-        
-        <!-- 日均信息 -->
-        <div class="detail-section">
-          <h4>日均分析</h4>
-          <div class="daily-info">
-            <div class="daily-item">
-              <span class="label">日均预算</span>
-              <span class="value">¥{{ dailyBudget.toFixed(2) }}</span>
-            </div>
-            <div class="daily-item">
-              <span class="label">日均支出</span>
-              <span class="value">¥{{ dailySpent.toFixed(2) }}</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 操作按钮 -->
-        <div class="detail-actions">
-          <Button block @click="showTransactions">查看交易明细</Button>
-          <Button block @click="showBudgetSetting(selectedBudgetStat.budget)">
-            编辑预算
-          </Button>
-          <Button block danger @click="deleteBudget">删除预算</Button>
-        </div>
-      </div>
-    </Drawer>
-    
-    <!-- 预算设置 -->
-    <BudgetSetting
-      v-model:visible="budgetSettingVisible"
-      :budget="editingBudget"
-      @success="handleBudgetSuccess"
-    />
-  </div>
-</template>
-
 <script setup lang="ts">
-import type { Budget, BudgetStats } from '#/types/finance';
 import type { Dayjs } from 'dayjs';
 
-import { LeftOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons-vue';
+import type { Budget, BudgetStats } from '#/types/finance';
+
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+import {
+  LeftOutlined,
+  PlusOutlined,
+  RightOutlined,
+} from '@ant-design/icons-vue';
 import {
   Button,
   DatePicker,
   Drawer,
+  message,
   Modal,
   Progress,
-  message,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
-import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
 
 import { useBudgetStore } from '#/store/modules/budget';
 import { useCategoryStore } from '#/store/modules/category';
@@ -190,18 +40,21 @@ const budgetSettingVisible = ref(false);
 const editingBudget = ref<Budget | null>(null);
 
 const totalBudget = computed(() =>
-  budgetStats.value.reduce((sum, stat) => sum + stat.budget.amount, 0)
+  budgetStats.value.reduce((sum, stat) => sum + stat.budget.amount, 0),
 );
 
 const totalSpent = computed(() =>
-  budgetStats.value.reduce((sum, stat) => sum + stat.spent, 0)
+  budgetStats.value.reduce((sum, stat) => sum + stat.spent, 0),
 );
 
 const totalRemaining = computed(() => totalBudget.value - totalSpent.value);
 
 const budgetProgress = computed(() => {
   if (totalBudget.value === 0) return 0;
-  return Math.min(100, Math.round((totalSpent.value / totalBudget.value) * 100));
+  return Math.min(
+    100,
+    Math.round((totalSpent.value / totalBudget.value) * 100),
+  );
 });
 
 const progressColor = computed(() => {
@@ -263,12 +116,12 @@ const fetchBudgetData = async () => {
   const monthBudgets = budgetStore.budgets.filter(
     (b) =>
       b.year === year &&
-      (b.period === 'yearly' || (b.period === 'monthly' && b.month === month))
+      (b.period === 'yearly' || (b.period === 'monthly' && b.month === month)),
   );
 
   // 计算每个预算的统计信息
   budgetStats.value = monthBudgets.map((budget) =>
-    budgetStore.calculateBudgetStats(budget, transactionStore.transactions)
+    budgetStore.calculateBudgetStats(budget, transactionStore.transactions),
   );
 };
 
@@ -317,29 +170,200 @@ onMounted(() => {
 });
 </script>
 
+<template>
+  <div class="mobile-budget">
+    <!-- 月份选择 -->
+    <div class="month-selector">
+      <Button type="text" @click="changeMonth(-1)">
+        <LeftOutlined />
+      </Button>
+      <DatePicker
+        v-model:value="selectedMonth"
+        picker="month"
+        format="YYYY年MM月"
+        style="flex: 1; text-align: center"
+        :bordered="false"
+        @change="fetchBudgetData"
+      />
+      <Button type="text" @click="changeMonth(1)">
+        <RightOutlined />
+      </Button>
+    </div>
+
+    <!-- 预算总览 -->
+    <div class="budget-summary">
+      <div class="summary-chart">
+        <Progress
+          type="circle"
+          :percent="budgetProgress"
+          :stroke-color="progressColor"
+          :format="formatProgress"
+        />
+      </div>
+      <div class="summary-info">
+        <div class="info-item">
+          <span class="label">预算总额</span>
+          <span class="value">¥{{ totalBudget.toFixed(2) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">已使用</span>
+          <span class="value expense">¥{{ totalSpent.toFixed(2) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">剩余</span>
+          <span class="value" :class="{ danger: totalRemaining < 0 }">
+            ¥{{ Math.abs(totalRemaining).toFixed(2) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 分类预算列表 -->
+    <div class="budget-list">
+      <div
+        v-for="stat in budgetStats"
+        :key="stat.budget.id"
+        class="budget-item"
+      >
+        <div class="budget-header">
+          <div class="category-info">
+            <span class="category-icon">{{
+              getCategoryIcon(stat.budget.categoryId)
+            }}</span>
+            <span class="category-name">{{
+              getCategoryName(stat.budget.categoryId)
+            }}</span>
+          </div>
+          <div class="budget-actions">
+            <Button type="text" size="small" @click="showBudgetDetail(stat)">
+              详情
+            </Button>
+          </div>
+        </div>
+
+        <div class="budget-progress">
+          <div class="progress-info">
+            <span class="spent">¥{{ stat.spent.toFixed(2) }}</span>
+            <span class="total">/ ¥{{ stat.budget.amount.toFixed(2) }}</span>
+          </div>
+          <Progress
+            :percent="stat.percentage"
+            :stroke-color="getProgressColor(stat.percentage)"
+            :show-info="false"
+            size="small"
+          />
+          <div class="progress-footer">
+            <span class="remaining">
+              剩余 ¥{{ Math.max(0, stat.remaining).toFixed(2) }}
+            </span>
+            <span class="percentage">{{ stat.percentage }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 添加预算按钮 -->
+      <div class="add-budget-card" @click="showBudgetSetting(null)">
+        <PlusOutlined />
+        <span>设置预算</span>
+      </div>
+    </div>
+
+    <!-- 预算详情抽屉 -->
+    <Drawer
+      v-model:open="detailDrawerVisible"
+      :title="`${selectedCategoryName} - 预算详情`"
+      placement="bottom"
+      height="70%"
+    >
+      <div v-if="selectedBudgetStat" class="budget-detail">
+        <!-- 预算信息 -->
+        <div class="detail-section">
+          <h4>预算信息</h4>
+          <div class="detail-item">
+            <span class="label">预算金额</span>
+            <span class="value"
+              >¥{{ selectedBudgetStat.budget.amount.toFixed(2) }}</span
+            >
+          </div>
+          <div class="detail-item">
+            <span class="label">已使用</span>
+            <span class="value"
+              >¥{{ selectedBudgetStat.spent.toFixed(2) }}</span
+            >
+          </div>
+          <div class="detail-item">
+            <span class="label">剩余</span>
+            <span
+              class="value"
+              :class="{ danger: selectedBudgetStat.remaining < 0 }"
+            >
+              ¥{{ Math.abs(selectedBudgetStat.remaining).toFixed(2) }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="label">交易笔数</span>
+            <span class="value">{{ selectedBudgetStat.transactions }} 笔</span>
+          </div>
+        </div>
+
+        <!-- 日均信息 -->
+        <div class="detail-section">
+          <h4>日均分析</h4>
+          <div class="daily-info">
+            <div class="daily-item">
+              <span class="label">日均预算</span>
+              <span class="value">¥{{ dailyBudget.toFixed(2) }}</span>
+            </div>
+            <div class="daily-item">
+              <span class="label">日均支出</span>
+              <span class="value">¥{{ dailySpent.toFixed(2) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="detail-actions">
+          <Button block @click="showTransactions">查看交易明细</Button>
+          <Button block @click="showBudgetSetting(selectedBudgetStat.budget)">
+            编辑预算
+          </Button>
+          <Button block danger @click="deleteBudget">删除预算</Button>
+        </div>
+      </div>
+    </Drawer>
+
+    <!-- 预算设置 -->
+    <BudgetSetting
+      v-model:visible="budgetSettingVisible"
+      :budget="editingBudget"
+      @success="handleBudgetSuccess"
+    />
+  </div>
+</template>
+
 <style scoped>
 .mobile-budget {
-  background: #f5f5f5;
   min-height: 100%;
   padding-bottom: 20px;
+  background: #f5f5f5;
 }
 
 .month-selector {
-  background: #fff;
   display: flex;
   align-items: center;
   padding: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
 }
 
 .budget-summary {
-  background: #fff;
-  margin: 12px;
-  padding: 16px;
-  border-radius: 8px;
   display: flex;
-  align-items: center;
   gap: 20px;
+  align-items: center;
+  padding: 16px;
+  margin: 12px;
+  background: #fff;
+  border-radius: 8px;
 }
 
 .summary-chart {
@@ -347,16 +371,16 @@ onMounted(() => {
 }
 
 .summary-info {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 8px;
 }
 
 .info-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
 .info-item .label {
@@ -383,23 +407,23 @@ onMounted(() => {
 }
 
 .budget-item {
-  background: #fff;
-  border-radius: 8px;
   padding: 16px;
   margin-bottom: 12px;
+  background: #fff;
+  border-radius: 8px;
 }
 
 .budget-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 12px;
 }
 
 .category-info {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
 .category-icon {
@@ -420,8 +444,8 @@ onMounted(() => {
 
 .progress-info {
   display: flex;
-  align-items: baseline;
   gap: 4px;
+  align-items: baseline;
 }
 
 .progress-info .spent {
@@ -446,22 +470,22 @@ onMounted(() => {
 }
 
 .progress-footer .percentage {
-  color: #1890ff;
   font-weight: 500;
+  color: #1890ff;
 }
 
 .add-budget-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 8px;
-  border: 1px dashed #d9d9d9;
-  cursor: pointer;
-  transition: all 0.3s;
+  align-items: center;
+  padding: 24px;
   color: #8c8c8c;
+  cursor: pointer;
+  background: #fff;
+  border: 1px dashed #d9d9d9;
+  border-radius: 8px;
+  transition: all 0.3s;
 }
 
 .add-budget-card:active {
@@ -469,8 +493,8 @@ onMounted(() => {
 }
 
 .add-budget-card:hover {
-  border-color: #1890ff;
   color: #1890ff;
+  border-color: #1890ff;
 }
 
 .budget-detail {
@@ -482,16 +506,16 @@ onMounted(() => {
 }
 
 .detail-section h4 {
+  margin-bottom: 12px;
   font-size: 14px;
   font-weight: 500;
   color: #262626;
-  margin-bottom: 12px;
 }
 
 .detail-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   padding: 8px 0;
   border-bottom: 1px solid #f0f0f0;
 }
@@ -501,14 +525,14 @@ onMounted(() => {
 }
 
 .detail-item .label {
-  color: #8c8c8c;
   font-size: 14px;
+  color: #8c8c8c;
 }
 
 .detail-item .value {
-  color: #262626;
   font-size: 14px;
   font-weight: 500;
+  color: #262626;
 }
 
 .detail-item .value.danger {
@@ -522,17 +546,17 @@ onMounted(() => {
 }
 
 .daily-item {
-  background: #f5f5f5;
   padding: 12px;
-  border-radius: 8px;
   text-align: center;
+  background: #f5f5f5;
+  border-radius: 8px;
 }
 
 .daily-item .label {
   display: block;
+  margin-bottom: 4px;
   font-size: 12px;
   color: #8c8c8c;
-  margin-bottom: 4px;
 }
 
 .daily-item .value {

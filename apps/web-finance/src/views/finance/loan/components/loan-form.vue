@@ -1,12 +1,29 @@
 <script lang="ts" setup>
 import type { FormInstance, Rule } from 'ant-design-vue/es/form';
-import type { Loan, LoanStatus } from '#/types/finance';
+
+import type { Loan } from '#/types/finance';
 
 import { computed, reactive, ref, watch } from 'vue';
 
-import { DatePicker, Form, Input, InputNumber, Modal, Select } from 'ant-design-vue';
+import {
+  DatePicker,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Select,
+} from 'ant-design-vue';
 import dayjs from 'dayjs';
 
+const props = withDefaults(defineProps<Props>(), {
+  visible: false,
+  loan: null,
+});
+// Emits
+const emit = defineEmits<{
+  submit: [Partial<Loan>];
+  'update:visible': [boolean];
+}>();
 const FormItem = Form.Item;
 const TextArea = Input.TextArea;
 
@@ -15,17 +32,6 @@ interface Props {
   visible: boolean;
   loan?: Loan | null;
 }
-
-const props = withDefaults(defineProps<Props>(), {
-  visible: false,
-  loan: null,
-});
-
-// Emits
-const emit = defineEmits<{
-  'update:visible': [boolean];
-  'submit': [Partial<Loan>];
-}>();
 
 // 表单实例
 const formRef = ref<FormInstance>();
@@ -44,7 +50,7 @@ const formData = reactive<Partial<Loan>>({
 
 // 计算属性
 const isEdit = computed(() => !!props.loan);
-const modalTitle = computed(() => isEdit.value ? '编辑贷款' : '新建贷款');
+const modalTitle = computed(() => (isEdit.value ? '编辑贷款' : '新建贷款'));
 
 // 表单规则
 const rules: Record<string, Rule[]> = {
@@ -66,36 +72,39 @@ const rules: Record<string, Rule[]> = {
 };
 
 // 监听属性变化
-watch(() => props.visible, (newVal) => {
-  if (newVal) {
-    if (props.loan) {
-      // 编辑模式，填充数据
-      Object.assign(formData, {
-        borrower: props.loan.borrower,
-        lender: props.loan.lender,
-        amount: props.loan.amount,
-        currency: props.loan.currency,
-        startDate: props.loan.startDate,
-        dueDate: props.loan.dueDate || '',
-        description: props.loan.description || '',
-        status: props.loan.status,
-      });
-    } else {
-      // 新建模式，重置数据
-      formRef.value?.resetFields();
-      Object.assign(formData, {
-        borrower: '',
-        lender: '',
-        amount: 0,
-        currency: 'CNY',
-        startDate: dayjs().format('YYYY-MM-DD'),
-        dueDate: '',
-        description: '',
-        status: 'active',
-      });
+watch(
+  () => props.visible,
+  (newVal) => {
+    if (newVal) {
+      if (props.loan) {
+        // 编辑模式，填充数据
+        Object.assign(formData, {
+          borrower: props.loan.borrower,
+          lender: props.loan.lender,
+          amount: props.loan.amount,
+          currency: props.loan.currency,
+          startDate: props.loan.startDate,
+          dueDate: props.loan.dueDate || '',
+          description: props.loan.description || '',
+          status: props.loan.status,
+        });
+      } else {
+        // 新建模式，重置数据
+        formRef.value?.resetFields();
+        Object.assign(formData, {
+          borrower: '',
+          lender: '',
+          amount: 0,
+          currency: 'CNY',
+          startDate: dayjs().format('YYYY-MM-DD'),
+          dueDate: '',
+          description: '',
+          status: 'active',
+        });
+      }
     }
-  }
-});
+  },
+);
 
 // 处理取消
 function handleCancel() {
@@ -106,14 +115,16 @@ function handleCancel() {
 async function handleSubmit() {
   try {
     await formRef.value?.validateFields();
-    
+
     // 处理日期格式
     const submitData = {
       ...formData,
       startDate: dayjs(formData.startDate).format('YYYY-MM-DD'),
-      dueDate: formData.dueDate ? dayjs(formData.dueDate).format('YYYY-MM-DD') : undefined,
+      dueDate: formData.dueDate
+        ? dayjs(formData.dueDate).format('YYYY-MM-DD')
+        : undefined,
     };
-    
+
     emit('submit', submitData);
     emit('update:visible', false);
   } catch (error) {
@@ -130,12 +141,7 @@ async function handleSubmit() {
     @cancel="handleCancel"
     @ok="handleSubmit"
   >
-    <Form
-      ref="formRef"
-      :model="formData"
-      :rules="rules"
-      layout="vertical"
-    >
+    <Form ref="formRef" :model="formData" :rules="rules" layout="vertical">
       <FormItem label="借款人" name="borrower">
         <Input
           v-model:value="formData.borrower"
@@ -202,7 +208,7 @@ async function handleSubmit() {
           :rows="3"
           placeholder="请输入贷款描述信息（可选）"
           maxlength="200"
-          showCount
+          show-count
         />
       </FormItem>
     </Form>

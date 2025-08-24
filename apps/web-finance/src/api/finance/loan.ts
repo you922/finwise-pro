@@ -1,9 +1,4 @@
-import type { 
-  Loan, 
-  LoanRepayment, 
-  PageResult, 
-  SearchParams 
-} from '#/types/finance';
+import type { Loan, LoanRepayment, SearchParams } from '#/types/finance';
 
 import { loanService } from '#/api/mock/finance-service';
 
@@ -37,7 +32,10 @@ export async function deleteLoan(id: string) {
 }
 
 // 添加还款记录
-export async function addLoanRepayment(loanId: string, repayment: Partial<LoanRepayment>) {
+export async function addLoanRepayment(
+  loanId: string,
+  repayment: Partial<LoanRepayment>,
+) {
   return loanService.addRepayment(loanId, repayment);
 }
 

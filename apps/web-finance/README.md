@@ -5,12 +5,14 @@
 ## 功能特性
 
 ### 核心功能
+
 - **交易管理**：记录和管理所有收支交易，支持多币种、多状态管理
 - **分类管理**：灵活的收支分类体系，支持自定义分类
 - **人员管理**：管理交易相关人员，支持多角色（付款人、收款人、借款人、出借人）
 - **贷款管理**：完整的贷款和还款记录管理，自动计算还款进度
 
 ### 技术特性
+
 - **现代化技术栈**：Vue 3 + TypeScript + Vite + Pinia + Ant Design Vue
 - **本地存储**：使用 IndexedDB 进行数据持久化，支持离线使用
 - **Mock API**：完整的 Mock 数据服务，方便开发和测试
@@ -20,16 +22,19 @@
 ## 快速开始
 
 ### 安装依赖
+
 ```bash
 pnpm install
 ```
 
 ### 启动开发服务器
+
 ```bash
 pnpm dev:finance
 ```
 
 ### 访问系统
+
 - 开发地址：http://localhost:5666/
 - 默认账号：vben
 - 默认密码：123456
@@ -58,17 +63,20 @@ src/
 ## 数据存储
 
 系统使用 IndexedDB 作为本地存储方案，支持：
+
 - 自动数据持久化
 - 事务支持
 - 索引查询
 - 数据备份和恢复
 
 ### 数据迁移
+
 如果您有旧版本的数据（存储在 localStorage），系统会在启动时自动检测并迁移到新的存储系统。
 
 ## 开发指南
 
 ### 添加新功能
+
 1. 在 `types/finance.ts` 中定义数据类型
 2. 在 `api/finance/` 中创建 API 接口
 3. 在 `store/modules/` 中创建状态管理
@@ -76,11 +84,13 @@ src/
 5. 在 `router/routes/modules/` 中配置路由
 
 ### Mock 数据
+
 Mock 数据服务位于 `api/mock/finance-service.ts`，可以根据需要修改初始数据或添加新的 Mock 接口。
 
 ## 测试
 
 运行 Playwright 测试：
+
 ```bash
 node test-finance-system.js
 ```
@@ -88,6 +98,7 @@ node test-finance-system.js
 ## 部署
 
 ### 构建生产版本
+
 ```bash
 pnpm build:finance
 ```

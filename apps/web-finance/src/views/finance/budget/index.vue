@@ -1,190 +1,7 @@
-<template>
-  <div class="budget-management">
-    <Card>
-      <template #title>
-        <Space>
-          <span>预算管理</span>
-          <Select
-            v-model:value="selectedPeriod"
-            style="width: 120px"
-            @change="handlePeriodChange"
-          >
-            <SelectOption value="current">当前月</SelectOption>
-            <SelectOption value="custom">自定义</SelectOption>
-          </Select>
-          <DatePicker
-            v-if="selectedPeriod === 'custom'"
-            v-model:value="selectedMonth"
-            picker="month"
-            format="YYYY年MM月"
-            @change="fetchBudgetData"
-          />
-        </Space>
-      </template>
-      
-      <template #extra>
-        <Button type="primary" @click="showBudgetSetting(null)">
-          <PlusOutlined /> 设置预算
-        </Button>
-      </template>
-      
-      <div class="budget-overview">
-        <Row :gutter="16">
-          <Col :span="8">
-            <Statistic
-              title="月度预算总额"
-              :value="totalBudget"
-              :precision="2"
-              prefix="¥"
-              :valueStyle="{ color: '#1890ff' }"
-            />
-          </Col>
-          <Col :span="8">
-            <Statistic
-              title="已使用金额"
-              :value="totalSpent"
-              :precision="2"
-              prefix="¥"
-              :valueStyle="{ color: totalSpent > totalBudget ? '#f5222d' : '#52c41a' }"
-            />
-          </Col>
-          <Col :span="8">
-            <Statistic
-              title="剩余预算"
-              :value="totalRemaining"
-              :precision="2"
-              prefix="¥"
-              :valueStyle="{ color: totalRemaining < 0 ? '#f5222d' : '#52c41a' }"
-            />
-          </Col>
-        </Row>
-      </div>
-      
-      <Divider />
-      
-      <div class="budget-list">
-        <List
-          :dataSource="budgetStats"
-          :loading="loading"
-        >
-          <template #renderItem="{ item }">
-            <ListItem>
-              <ListItemMeta>
-                <template #title>
-                  <Space>
-                    <span>{{ getCategoryName(item.budget.categoryId) }}</span>
-                    <Tag :color="item.budget.period === 'yearly' ? 'purple' : 'blue'">
-                      {{ item.budget.period === 'yearly' ? '年度' : '月度' }}
-                    </Tag>
-                  </Space>
-                </template>
-                <template #description>
-                  <Space>
-                    <span>预算: ¥{{ item.budget.amount.toFixed(2) }}</span>
-                    <Divider type="vertical" />
-                    <span>已用: ¥{{ item.spent.toFixed(2) }}</span>
-                    <Divider type="vertical" />
-                    <span>剩余: ¥{{ item.remaining.toFixed(2) }}</span>
-                    <Divider type="vertical" />
-                    <span>{{ item.transactions }} 笔交易</span>
-                  </Space>
-                </template>
-              </ListItemMeta>
-              
-              <template #actions>
-                <Space>
-                  <Progress
-                    :percent="item.percentage"
-                    :strokeColor="getProgressColor(item.percentage)"
-                    :format="percent => `${percent}%`"
-                    style="width: 120px"
-                  />
-                  <Button
-                    type="link"
-                    size="small"
-                    @click="showTransactions(item.budget.categoryId)"
-                  >
-                    查看明细
-                  </Button>
-                  <Button
-                    type="link"
-                    size="small"
-                    @click="showBudgetSetting(item.budget)"
-                  >
-                    编辑
-                  </Button>
-                  <Popconfirm
-                    title="确定要删除这个预算吗？"
-                    @confirm="handleDelete(item.budget.id)"
-                  >
-                    <Button type="link" size="small" danger>
-                      删除
-                    </Button>
-                  </Popconfirm>
-                </Space>
-              </template>
-            </ListItem>
-          </template>
-          
-          <template #empty>
-            <Empty description="暂未设置预算">
-              <Button type="primary" @click="showBudgetSetting(null)">
-                立即设置
-              </Button>
-            </Empty>
-          </template>
-        </List>
-      </div>
-    </Card>
-    
-    <!-- 预算设置弹窗 -->
-    <BudgetSetting
-      v-model:visible="budgetSettingVisible"
-      :budget="editingBudget"
-      @success="handleBudgetSuccess"
-    />
-    
-    <!-- 交易明细抽屉 -->
-    <Drawer
-      v-model:open="transactionDrawerVisible"
-      title="交易明细"
-      width="800"
-      placement="right"
-    >
-      <List
-        :dataSource="categoryTransactions"
-        :pagination="{ pageSize: 10 }"
-      >
-        <template #renderItem="{ item }">
-          <ListItem>
-            <ListItemMeta>
-              <template #title>
-                <Space>
-                  <span>{{ item.description || getCategoryName(item.categoryId) }}</span>
-                  <Tag :color="item.amount > 0 ? 'red' : 'green'">
-                    {{ item.currency }} {{ Math.abs(item.amount).toFixed(2) }}
-                  </Tag>
-                </Space>
-              </template>
-              <template #description>
-                <Space>
-                  <span>{{ dayjs(item.date).format('YYYY-MM-DD') }}</span>
-                  <Divider type="vertical" />
-                  <span>{{ item.project || '-' }}</span>
-                  <Divider type="vertical" />
-                  <span>{{ item.payer || '-' }} → {{ item.payee || '-' }}</span>
-                </Space>
-              </template>
-            </ListItemMeta>
-          </ListItem>
-        </template>
-      </List>
-    </Drawer>
-  </div>
-</template>
-
 <script setup lang="ts">
-import type { Budget, BudgetStats, Transaction } from '#/types/finance';
+import type { Budget, BudgetStats } from '#/types/finance';
+
+import { computed, onMounted, ref } from 'vue';
 
 import { PlusOutlined } from '@ant-design/icons-vue';
 import {
@@ -198,6 +15,7 @@ import {
   List,
   ListItem,
   ListItemMeta,
+  message,
   Popconfirm,
   Progress,
   Row,
@@ -206,10 +24,8 @@ import {
   Space,
   Statistic,
   Tag,
-  message,
 } from 'ant-design-vue';
 import dayjs, { Dayjs } from 'dayjs';
-import { computed, onMounted, ref } from 'vue';
 
 import { useBudgetStore } from '#/store/modules/budget';
 import { useCategoryStore } from '#/store/modules/category';
@@ -232,21 +48,21 @@ const selectedCategoryId = ref<string>('');
 const budgetStats = ref<BudgetStats[]>([]);
 
 const totalBudget = computed(() =>
-  budgetStats.value.reduce((sum, stat) => sum + stat.budget.amount, 0)
+  budgetStats.value.reduce((sum, stat) => sum + stat.budget.amount, 0),
 );
 
 const totalSpent = computed(() =>
-  budgetStats.value.reduce((sum, stat) => sum + stat.spent, 0)
+  budgetStats.value.reduce((sum, stat) => sum + stat.spent, 0),
 );
 
 const totalRemaining = computed(() => totalBudget.value - totalSpent.value);
 
 const categoryTransactions = computed(() => {
   if (!selectedCategoryId.value) return [];
-  
+
   const year = selectedMonth.value.year();
   const month = selectedMonth.value.month() + 1;
-  
+
   return transactionStore.transactions.filter((t) => {
     const date = dayjs(t.date);
     return (
@@ -281,20 +97,21 @@ const fetchBudgetData = async () => {
   try {
     await budgetStore.fetchBudgets();
     await transactionStore.fetchTransactions();
-    
+
     const year = selectedMonth.value.year();
     const month = selectedMonth.value.month() + 1;
-    
+
     // 获取指定月份的预算
     const monthBudgets = budgetStore.budgets.filter(
       (b) =>
         b.year === year &&
-        (b.period === 'yearly' || (b.period === 'monthly' && b.month === month))
+        (b.period === 'yearly' ||
+          (b.period === 'monthly' && b.month === month)),
     );
-    
+
     // 计算每个预算的统计信息
     budgetStats.value = monthBudgets.map((budget) =>
-      budgetStore.calculateBudgetStats(budget, transactionStore.transactions)
+      budgetStore.calculateBudgetStats(budget, transactionStore.transactions),
     );
   } finally {
     loading.value = false;
@@ -320,7 +137,7 @@ const handleDelete = async (id: string) => {
     await budgetStore.deleteBudget(id);
     message.success('预算删除成功');
     fetchBudgetData();
-  } catch (error) {
+  } catch {
     message.error('删除预算失败');
   }
 };
@@ -329,6 +146,193 @@ onMounted(() => {
   fetchBudgetData();
 });
 </script>
+
+<template>
+  <div class="budget-management">
+    <Card>
+      <template #title>
+        <Space>
+          <span>预算管理</span>
+          <Select
+            v-model:value="selectedPeriod"
+            style="width: 120px"
+            @change="handlePeriodChange"
+          >
+            <SelectOption value="current">当前月</SelectOption>
+            <SelectOption value="custom">自定义</SelectOption>
+          </Select>
+          <DatePicker
+            v-if="selectedPeriod === 'custom'"
+            v-model:value="selectedMonth"
+            picker="month"
+            format="YYYY年MM月"
+            @change="fetchBudgetData"
+          />
+        </Space>
+      </template>
+
+      <template #extra>
+        <Button type="primary" @click="showBudgetSetting(null)">
+          <PlusOutlined /> 设置预算
+        </Button>
+      </template>
+
+      <div class="budget-overview">
+        <Row :gutter="16">
+          <Col :span="8">
+            <Statistic
+              title="月度预算总额"
+              :value="totalBudget"
+              :precision="2"
+              prefix="¥"
+              :value-style="{ color: '#1890ff' }"
+            />
+          </Col>
+          <Col :span="8">
+            <Statistic
+              title="已使用金额"
+              :value="totalSpent"
+              :precision="2"
+              prefix="¥"
+              :value-style="{
+                color: totalSpent > totalBudget ? '#f5222d' : '#52c41a',
+              }"
+            />
+          </Col>
+          <Col :span="8">
+            <Statistic
+              title="剩余预算"
+              :value="totalRemaining"
+              :precision="2"
+              prefix="¥"
+              :value-style="{
+                color: totalRemaining < 0 ? '#f5222d' : '#52c41a',
+              }"
+            />
+          </Col>
+        </Row>
+      </div>
+
+      <Divider />
+
+      <div class="budget-list">
+        <List :data-source="budgetStats" :loading="loading">
+          <template #renderItem="{ item }">
+            <ListItem>
+              <ListItemMeta>
+                <template #title>
+                  <Space>
+                    <span>{{ getCategoryName(item.budget.categoryId) }}</span>
+                    <Tag
+                      :color="
+                        item.budget.period === 'yearly' ? 'purple' : 'blue'
+                      "
+                    >
+                      {{ item.budget.period === 'yearly' ? '年度' : '月度' }}
+                    </Tag>
+                  </Space>
+                </template>
+                <template #description>
+                  <Space>
+                    <span>预算: ¥{{ item.budget.amount.toFixed(2) }}</span>
+                    <Divider type="vertical" />
+                    <span>已用: ¥{{ item.spent.toFixed(2) }}</span>
+                    <Divider type="vertical" />
+                    <span>剩余: ¥{{ item.remaining.toFixed(2) }}</span>
+                    <Divider type="vertical" />
+                    <span>{{ item.transactions }} 笔交易</span>
+                  </Space>
+                </template>
+              </ListItemMeta>
+
+              <template #actions>
+                <Space>
+                  <Progress
+                    :percent="item.percentage"
+                    :stroke-color="getProgressColor(item.percentage)"
+                    :format="(percent) => `${percent}%`"
+                    style="width: 120px"
+                  />
+                  <Button
+                    type="link"
+                    size="small"
+                    @click="showTransactions(item.budget.categoryId)"
+                  >
+                    查看明细
+                  </Button>
+                  <Button
+                    type="link"
+                    size="small"
+                    @click="showBudgetSetting(item.budget)"
+                  >
+                    编辑
+                  </Button>
+                  <Popconfirm
+                    title="确定要删除这个预算吗？"
+                    @confirm="handleDelete(item.budget.id)"
+                  >
+                    <Button type="link" size="small" danger> 删除 </Button>
+                  </Popconfirm>
+                </Space>
+              </template>
+            </ListItem>
+          </template>
+
+          <template #empty>
+            <Empty description="暂未设置预算">
+              <Button type="primary" @click="showBudgetSetting(null)">
+                立即设置
+              </Button>
+            </Empty>
+          </template>
+        </List>
+      </div>
+    </Card>
+
+    <!-- 预算设置弹窗 -->
+    <BudgetSetting
+      v-model:visible="budgetSettingVisible"
+      :budget="editingBudget"
+      @success="handleBudgetSuccess"
+    />
+
+    <!-- 交易明细抽屉 -->
+    <Drawer
+      v-model:open="transactionDrawerVisible"
+      title="交易明细"
+      width="800"
+      placement="right"
+    >
+      <List :data-source="categoryTransactions" :pagination="{ pageSize: 10 }">
+        <template #renderItem="{ item }">
+          <ListItem>
+            <ListItemMeta>
+              <template #title>
+                <Space>
+                  <span>{{
+                    item.description || getCategoryName(item.categoryId)
+                  }}</span>
+                  <Tag :color="item.amount > 0 ? 'red' : 'green'">
+                    {{ item.currency }} {{ Math.abs(item.amount).toFixed(2) }}
+                  </Tag>
+                </Space>
+              </template>
+              <template #description>
+                <Space>
+                  <span>{{ dayjs(item.date).format('YYYY-MM-DD') }}</span>
+                  <Divider type="vertical" />
+                  <span>{{ item.project || '-' }}</span>
+                  <Divider type="vertical" />
+                  <span>{{ item.payer || '-' }} → {{ item.payee || '-' }}</span>
+                </Space>
+              </template>
+            </ListItemMeta>
+          </ListItem>
+        </template>
+      </List>
+    </Drawer>
+  </div>
+</template>
 
 <style scoped>
 .budget-management {

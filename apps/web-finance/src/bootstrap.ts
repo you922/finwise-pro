@@ -6,7 +6,6 @@ import { preferences } from '@vben/preferences';
 import { initStores } from '@vben/stores';
 import '@vben/styles';
 import '@vben/styles/antd';
-import '#/styles/mobile.css';
 
 import { useTitle } from '@vueuse/core';
 
@@ -19,10 +18,12 @@ import { initSetupVbenForm } from './adapter/form';
 import App from './app.vue';
 import { router } from './router';
 
+import '#/styles/mobile.css';
+
 async function bootstrap(namespace: string) {
   // 初始化数据库和 Mock 数据
   await initializeData();
-  
+
   // 检查并执行数据迁移
   if (needsMigration()) {
     console.log('检测到旧数据，开始迁移...');

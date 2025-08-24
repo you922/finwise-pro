@@ -1,17 +1,12 @@
-<template>
-  <div class="monthly-comparison-chart">
-    <div ref="chartRef" class="chart-container"></div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import type { EChartsOption } from '#/components/charts/useChart';
 import type { Transaction } from '#/types/finance';
 
 import { computed, onMounted, ref, watch } from 'vue';
 
-import { useChart } from '#/components/charts/useChart';
 import dayjs from 'dayjs';
+
+import { useChart } from '#/components/charts/useChart';
 
 interface Props {
   transactions: Transaction[];
@@ -24,17 +19,30 @@ const chartRef = ref<HTMLDivElement | null>(null);
 const { setOptions } = useChart(chartRef);
 
 const chartData = computed(() => {
-  const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
-  const incomeData = new Array(12).fill(0);
-  const expenseData = new Array(12).fill(0);
-  const netData = new Array(12).fill(0);
-  
+  const months = [
+    '1月',
+    '2月',
+    '3月',
+    '4月',
+    '5月',
+    '6月',
+    '7月',
+    '8月',
+    '9月',
+    '10月',
+    '11月',
+    '12月',
+  ];
+  const incomeData = Array.from({ length: 12 }).fill(0);
+  const expenseData = Array.from({ length: 12 }).fill(0);
+  const netData = Array.from({ length: 12 }).fill(0);
+
   // 统计每月数据
-  props.transactions.forEach(transaction => {
+  props.transactions.forEach((transaction) => {
     const date = dayjs(transaction.date);
     if (date.year() === props.year) {
       const monthIndex = date.month(); // 0-11
-      
+
       if (transaction.type === 'income') {
         incomeData[monthIndex] += transaction.amount;
       } else {
@@ -42,12 +50,12 @@ const chartData = computed(() => {
       }
     }
   });
-  
+
   // 计算净收入
   for (let i = 0; i < 12; i++) {
     netData[i] = incomeData[i] - expenseData[i];
   }
-  
+
   return {
     months,
     income: incomeData,
@@ -73,7 +81,8 @@ const chartOptions = computed<EChartsOption>(() => ({
       let html = `<div style="font-weight: bold">${params[0].name}</div>`;
       params.forEach((item: any) => {
         const value = item.value.toFixed(2);
-        const prefix = item.seriesName === '净收入' && item.value > 0 ? '+' : '';
+        const prefix =
+          item.seriesName === '净收入' && item.value > 0 ? '+' : '';
         html += `<div>${item.marker} ${item.seriesName}: ${prefix}¥${value}</div>`;
       });
       return html;
@@ -156,6 +165,12 @@ onMounted(() => {
   setOptions(chartOptions.value);
 });
 </script>
+
+<template>
+  <div class="monthly-comparison-chart">
+    <div ref="chartRef" class="chart-container"></div>
+  </div>
+</template>
 
 <style scoped>
 .monthly-comparison-chart {

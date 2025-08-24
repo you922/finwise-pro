@@ -1,10 +1,5 @@
 // IndexedDB 工具类
-import type { 
-  Category, 
-  Loan, 
-  Person, 
-  Transaction 
-} from '#/types/finance';
+import type { Category, Loan, Person, Transaction } from '#/types/finance';
 
 const DB_NAME = 'TokenRecordsDB';
 const DB_VERSION = 2; // 升级版本号以添加新表
@@ -46,11 +41,16 @@ export function initDB(): Promise<IDBDatabase> {
 
       // 创建交易表
       if (!database.objectStoreNames.contains(STORES.TRANSACTIONS)) {
-        const transactionStore = database.createObjectStore(STORES.TRANSACTIONS, {
-          keyPath: 'id',
-        });
+        const transactionStore = database.createObjectStore(
+          STORES.TRANSACTIONS,
+          {
+            keyPath: 'id',
+          },
+        );
         transactionStore.createIndex('type', 'type', { unique: false });
-        transactionStore.createIndex('categoryId', 'categoryId', { unique: false });
+        transactionStore.createIndex('categoryId', 'categoryId', {
+          unique: false,
+        });
         transactionStore.createIndex('date', 'date', { unique: false });
         transactionStore.createIndex('currency', 'currency', { unique: false });
         transactionStore.createIndex('status', 'status', { unique: false });
@@ -118,7 +118,7 @@ export async function add<T>(storeName: string, data: T): Promise<T> {
   return new Promise((resolve, reject) => {
     const transaction = database.transaction([storeName], 'readwrite');
     const store = transaction.objectStore(storeName);
-    
+
     // 确保数据可以被IndexedDB存储（深拷贝并序列化）
     const serializedData = JSON.parse(JSON.stringify(data));
     const request = store.add(serializedData);
@@ -129,7 +129,11 @@ export async function add<T>(storeName: string, data: T): Promise<T> {
 
     request.onerror = () => {
       console.error('IndexedDB add error:', request.error);
-      reject(new Error(`Failed to add data to ${storeName}: ${request.error?.message}`));
+      reject(
+        new Error(
+          `Failed to add data to ${storeName}: ${request.error?.message}`,
+        ),
+      );
     };
   });
 }
@@ -140,7 +144,7 @@ export async function update<T>(storeName: string, data: T): Promise<T> {
   return new Promise((resolve, reject) => {
     const transaction = database.transaction([storeName], 'readwrite');
     const store = transaction.objectStore(storeName);
-    
+
     // 确保数据可以被IndexedDB存储（深拷贝并序列化）
     const serializedData = JSON.parse(JSON.stringify(data));
     const request = store.put(serializedData);
@@ -151,7 +155,11 @@ export async function update<T>(storeName: string, data: T): Promise<T> {
 
     request.onerror = () => {
       console.error('IndexedDB update error:', request.error);
-      reject(new Error(`Failed to update data in ${storeName}: ${request.error?.message}`));
+      reject(
+        new Error(
+          `Failed to update data in ${storeName}: ${request.error?.message}`,
+        ),
+      );
     };
   });
 }
@@ -175,7 +183,7 @@ export async function remove(storeName: string, id: string): Promise<void> {
 }
 
 // 通用的获取单条数据方法
-export async function get<T>(storeName: string, id: string): Promise<T | null> {
+export async function get<T>(storeName: string, id: string): Promise<null | T> {
   const database = await getDB();
   return new Promise((resolve, reject) => {
     const transaction = database.transaction([storeName], 'readonly');
@@ -252,7 +260,10 @@ export async function clear(storeName: string): Promise<void> {
 }
 
 // 批量添加数据
-export async function addBatch<T>(storeName: string, dataList: T[]): Promise<void> {
+export async function addBatch<T>(
+  storeName: string,
+  dataList: T[],
+): Promise<void> {
   const database = await getDB();
   return new Promise((resolve, reject) => {
     const transaction = database.transaction([storeName], 'readwrite');
@@ -270,17 +281,21 @@ export async function addBatch<T>(storeName: string, dataList: T[]): Promise<voi
 
     transaction.onerror = () => {
       console.error('IndexedDB addBatch error:', transaction.error);
-      reject(new Error(`Failed to add batch data to ${storeName}: ${transaction.error?.message}`));
+      reject(
+        new Error(
+          `Failed to add batch data to ${storeName}: ${transaction.error?.message}`,
+        ),
+      );
     };
   });
 }
 
 // 导出数据库
 export async function exportDatabase(): Promise<{
-  transactions: Transaction[];
   categories: Category[];
-  persons: Person[];
   loans: Loan[];
+  persons: Person[];
+  transactions: Transaction[];
 }> {
   const transactions = await getAll<Transaction>(STORES.TRANSACTIONS);
   const categories = await getAll<Category>(STORES.CATEGORIES);
@@ -297,10 +312,10 @@ export async function exportDatabase(): Promise<{
 
 // 导入数据库
 export async function importDatabase(data: {
-  transactions?: Transaction[];
   categories?: Category[];
-  persons?: Person[];
   loans?: Loan[];
+  persons?: Person[];
+  transactions?: Transaction[];
 }): Promise<void> {
   if (data.categories) {
     await clear(STORES.CATEGORIES);

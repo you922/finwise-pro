@@ -1,77 +1,7 @@
-<template>
-  <div class="tag-selector">
-    <Select
-      v-model:value="selectedTags"
-      mode="multiple"
-      placeholder="选择标签"
-      :options="tagOptions"
-      :loading="loading"
-      allowClear
-      showSearch
-      :filterOption="filterOption"
-      @change="handleChange"
-    >
-      <template #tagRender="{ label, value, closable, onClose }">
-        <Tag
-          :color="getTagColor(value)"
-          :closable="closable"
-          @close="onClose"
-          style="margin-right: 4px"
-        >
-          {{ label }}
-        </Tag>
-      </template>
-    </Select>
-    
-    <!-- 快速创建标签 -->
-    <div v-if="showQuickCreate" class="quick-create">
-      <Button type="link" size="small" @click="showCreateModal = true">
-        <PlusOutlined /> 创建新标签
-      </Button>
-    </div>
-    
-    <!-- 创建标签弹窗 -->
-    <Modal
-      v-model:open="showCreateModal"
-      title="创建新标签"
-      :width="400"
-      @ok="handleCreateTag"
-      @cancel="resetCreateForm"
-    >
-      <Form ref="createFormRef" :model="createForm" :rules="createRules">
-        <FormItem label="标签名称" name="name">
-          <Input
-            v-model:value="createForm.name"
-            placeholder="输入标签名称"
-            @pressEnter="handleCreateTag"
-          />
-        </FormItem>
-        <FormItem label="标签颜色" name="color">
-          <div class="color-picker">
-            <div
-              v-for="color in presetColors"
-              :key="color"
-              :style="{ backgroundColor: color }"
-              :class="['color-item', { active: createForm.color === color }]"
-              @click="createForm.color = color"
-            />
-          </div>
-        </FormItem>
-        <FormItem label="描述" name="description">
-          <TextArea
-            v-model:value="createForm.description"
-            placeholder="标签描述（可选）"
-            :rows="2"
-          />
-        </FormItem>
-      </Form>
-    </Modal>
-  </div>
-</template>
-
 <script setup lang="ts">
-import type { Tag as TagType } from '#/types/finance';
 import type { FormInstance, Rule } from 'ant-design-vue';
+
+import { computed, onMounted, ref, watch } from 'vue';
 
 import { PlusOutlined } from '@ant-design/icons-vue';
 import {
@@ -79,22 +9,13 @@ import {
   Form,
   FormItem,
   Input,
+  message,
   Modal,
   Select,
   Tag,
-  message,
 } from 'ant-design-vue';
 
-const { TextArea } = Input;
-import { computed, onMounted, ref, watch } from 'vue';
-
 import { useTagStore } from '#/store/modules/tag';
-
-interface Props {
-  value?: string[];
-  showQuickCreate?: boolean;
-  placeholder?: string;
-}
 
 const props = withDefaults(defineProps<Props>(), {
   value: () => [],
@@ -103,9 +24,17 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  'update:value': [value: string[]];
   change: [value: string[]];
+  'update:value': [value: string[]];
 }>();
+
+const { TextArea } = Input;
+
+interface Props {
+  value?: string[];
+  showQuickCreate?: boolean;
+  placeholder?: string;
+}
 
 const tagStore = useTagStore();
 
@@ -127,9 +56,8 @@ const createRules: Record<string, Rule[]> = {
     {
       validator: async (_rule, value) => {
         if (value && tagStore.isTagNameExists(value)) {
-          return Promise.reject('标签名称已存在');
+          throw '标签名称已存在';
         }
-        return Promise.resolve();
       },
     },
   ],
@@ -152,7 +80,7 @@ const tagOptions = computed(() =>
   tagStore.sortedTags.map((tag) => ({
     label: tag.name,
     value: tag.id,
-  }))
+  })),
 );
 
 const filterOption = (input: string, option: any) => {
@@ -197,7 +125,7 @@ watch(
   (newValue) => {
     selectedTags.value = newValue;
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 onMounted(async () => {
@@ -209,6 +137,78 @@ onMounted(async () => {
   }
 });
 </script>
+
+<template>
+  <div class="tag-selector">
+    <Select
+      v-model:value="selectedTags"
+      mode="multiple"
+      placeholder="选择标签"
+      :options="tagOptions"
+      :loading="loading"
+      allow-clear
+      show-search
+      :filter-option="filterOption"
+      @change="handleChange"
+    >
+      <template #tagRender="{ label, value, closable, onClose }">
+        <Tag
+          :color="getTagColor(value)"
+          :closable="closable"
+          @close="onClose"
+          style="margin-right: 4px"
+        >
+          {{ label }}
+        </Tag>
+      </template>
+    </Select>
+
+    <!-- 快速创建标签 -->
+    <div v-if="showQuickCreate" class="quick-create">
+      <Button type="link" size="small" @click="showCreateModal = true">
+        <PlusOutlined /> 创建新标签
+      </Button>
+    </div>
+
+    <!-- 创建标签弹窗 -->
+    <Modal
+      v-model:open="showCreateModal"
+      title="创建新标签"
+      :width="400"
+      @ok="handleCreateTag"
+      @cancel="resetCreateForm"
+    >
+      <Form ref="createFormRef" :model="createForm" :rules="createRules">
+        <FormItem label="标签名称" name="name">
+          <Input
+            v-model:value="createForm.name"
+            placeholder="输入标签名称"
+            @press-enter="handleCreateTag"
+          />
+        </FormItem>
+        <FormItem label="标签颜色" name="color">
+          <div class="color-picker">
+            <div
+              v-for="color in presetColors"
+              :key="color"
+              :style="{ backgroundColor: color }"
+              class="color-item"
+              :class="[{ active: createForm.color === color }]"
+              @click="createForm.color = color"
+            ></div>
+          </div>
+        </FormItem>
+        <FormItem label="描述" name="description">
+          <TextArea
+            v-model:value="createForm.description"
+            placeholder="标签描述（可选）"
+            :rows="2"
+          />
+        </FormItem>
+      </Form>
+    </Modal>
+  </div>
+</template>
 
 <style scoped>
 .tag-selector {

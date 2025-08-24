@@ -1,23 +1,22 @@
 import type { RouteRecordRaw } from 'vue-router';
 
 import { BasicLayout } from '#/layouts';
-import { $t } from '#/locales';
 
 const routes: RouteRecordRaw[] = [
   {
     component: BasicLayout,
     meta: {
       icon: 'ant-design:tool-outlined',
-      order: 3,
-      title: $t('tools.title'),
+      order: 6,
+      title: '系统工具',
     },
-    name: 'Tools',
+    name: 'SystemTools',
     path: '/tools',
     children: [
       {
         meta: {
           icon: 'ant-design:import-outlined',
-          title: $t('tools.import'),
+          title: '数据导入',
         },
         name: 'DataImport',
         path: 'import',
@@ -26,7 +25,7 @@ const routes: RouteRecordRaw[] = [
       {
         meta: {
           icon: 'ant-design:export-outlined',
-          title: $t('tools.export'),
+          title: '数据导出',
         },
         name: 'DataExport',
         path: 'export',
@@ -34,30 +33,32 @@ const routes: RouteRecordRaw[] = [
       },
       {
         meta: {
-          icon: 'ant-design:database-outlined',
-          title: $t('tools.backup'),
+          icon: 'ant-design:cloud-download-outlined',
+          title: '备份恢复',
         },
-        name: 'DataBackup',
+        name: 'BackupRestore',
         path: 'backup',
         component: () => import('#/views/tools/backup/index.vue'),
       },
       {
         meta: {
-          icon: 'ant-design:calculator-outlined',
-          title: $t('tools.budget'),
+          icon: 'ant-design:mobile-outlined',
+          title: '移动版',
+          hideInMenu: true,
         },
-        name: 'BudgetManagement',
-        path: 'budget',
-        component: () => import('#/views/tools/budget/index.vue'),
+        name: 'MobileFinance',
+        path: 'mobile',
+        component: () => import('#/views/finance/mobile/index.vue'),
       },
       {
         meta: {
-          icon: 'ant-design:tags-outlined',
-          title: $t('tools.tags'),
+          icon: 'ant-design:bug-outlined',
+          title: 'API测试',
+          hideInMenu: true,
         },
-        name: 'TagManagement',
-        path: 'tags',
-        component: () => import('#/views/tools/tags/index.vue'),
+        name: 'TestAPI',
+        path: 'test-api',
+        component: () => import('#/views/finance/test-api.vue'),
       },
     ],
   },
