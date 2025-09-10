@@ -69,20 +69,44 @@ function setupAccessGuard(router: Router) {
         return true;
       }
 
-      // 没有访问权限，跳转登录页面
-      if (to.fullPath !== LOGIN_PATH) {
-        return {
-          path: LOGIN_PATH,
-          // 如不需要，直接删除 query
-          query:
-            to.fullPath === preferences.app.defaultHomePath
-              ? {}
-              : { redirect: encodeURIComponent(to.fullPath) },
-          // 携带当前跳转的页面，登录后重新跳转该页面
-          replace: true,
-        };
+      // 开发环境自动登录
+      if (import.meta.env.DEV) {
+        try {
+          console.log('🔧 开发模式：自动设置访问权限...');
+          // 设置一个模拟的访问令牌用于开发
+          accessStore.setAccessToken('dev-mock-token-12345');
+          // 设置模拟用户信息
+          userStore.setUserInfo({
+            id: 'dev-user-001',
+            username: 'admin',
+            realName: 'TokenRecords 管理员',
+            avatar: '',
+            roles: ['admin', 'finance'],
+            homePath: preferences.app.defaultHomePath,
+          });
+          // 设置访问权限码
+          accessStore.setAccessCodes(['*']);
+          console.log('✅ 开发模式：自动登录成功');
+          // 继续路由处理
+        } catch (error) {
+          console.error('❌ 开发模式自动登录失败:', error);
+        }
+      } else {
+        // 生产环境：没有访问权限，跳转登录页面
+        if (to.fullPath !== LOGIN_PATH) {
+          return {
+            path: LOGIN_PATH,
+            // 如不需要，直接删除 query
+            query:
+              to.fullPath === preferences.app.defaultHomePath
+                ? {}
+                : { redirect: encodeURIComponent(to.fullPath) },
+            // 携带当前跳转的页面，登录后重新跳转该页面
+            replace: true,
+          };
+        }
+        return to;
       }
-      return to;
     }
 
     // 是否已经生成过动态路由

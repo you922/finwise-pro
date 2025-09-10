@@ -9,5 +9,6 @@ export const overridesPreferences = defineOverridesPreferences({
   // overrides
   app: {
     name: import.meta.env.VITE_APP_TITLE,
+    defaultHomePath: '/analytics/overview', // 设置默认首页为财务分析概览
   },
 });

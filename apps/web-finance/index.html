@@ -4,32 +4,87 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="renderer" content="webkit" />
-    <meta name="description" content="A Modern Back-end Management System" />
-    <meta name="keywords" content="Vben Admin Vue3 Vite" />
-    <meta name="author" content="Vben" />
+    <meta name="description" content="TokenRecords 财务管理系统" />
+    <meta name="keywords" content="TokenRecords Finance Management Vue3" />
+    <meta name="author" content="TokenRecords" />
     <meta
       name="viewport"
       content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0"
     />
-    <!-- 由 vite 注入 VITE_APP_TITLE 变量，在 .env 文件内配置 -->
-    <title><%= VITE_APP_TITLE %></title>
+    <title>TokenRecords 财务管理系统</title>
     <link rel="icon" href="/favicon.ico" />
-    <script>
-      // 生产环境下注入百度统计
-      if (window._VBEN_ADMIN_PRO_APP_CONF_) {
-        var _hmt = _hmt || [];
-        (function () {
-          var hm = document.createElement('script');
-          hm.src =
-            'https://hm.baidu.com/hm.js?b38e689f40558f20a9a686d7f6f33edf';
-          var s = document.getElementsByTagName('script')[0];
-          s.parentNode.insertBefore(hm, s);
-        })();
-      }
-    </script>
+    <style>
+      body { margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .loading { text-align: center; padding: 50px; }
+      .success { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 12px; margin: 20px 0; }
+      .error { background: #fee; color: #c33; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #fcc; }
+      .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0; }
+      .feature-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
+      .btn { display: inline-block; padding: 10px 20px; margin: 10px 5px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+      .btn:hover { background: #0056b3; }
+    </style>
   </head>
   <body>
+    <div id="fallback" class="loading">
+      <h1>🚀 正在启动 TokenRecords 财务管理系统...</h1>
+      <p>如果页面长时间不加载，请检查浏览器控制台或尝试刷新页面。</p>
+    </div>
+
     <div id="app"></div>
+
     <script type="module" src="/src/main.ts"></script>
+    
+    <script>
+      // 如果Vue应用在3秒内没有加载成功，显示静态备用页面
+      setTimeout(function() {
+        const app = document.getElementById('app');
+        const fallback = document.getElementById('fallback');
+        
+        if (app && !app.innerHTML.trim()) {
+          console.log('Vue应用可能加载失败，显示静态备用页面');
+          fallback.innerHTML = `
+            <div class="success">
+              <h1>🎉 TokenRecords 财务管理系统</h1>
+              <p>✅ 服务器运行正常 - 正在加载应用...</p>
+              <p>📊 端口: 5666 | API端口: 5320</p>
+              <p>⚡ Vue 3 + Vite + Ant Design Vue</p>
+            </div>
+            
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h3>📊 财务分析</h3>
+                <p>查看收支统计和趋势</p>
+                <a href="/analytics/overview" class="btn">进入分析</a>
+              </div>
+              <div class="feature-card">
+                <h3>💰 交易记录</h3>
+                <p>管理收入和支出</p>
+                <a href="/finance/transaction" class="btn">查看交易</a>
+              </div>
+              <div class="feature-card">
+                <h3>👥 人员管理</h3>
+                <p>管理付款人和收款人</p>
+                <a href="/finance/person" class="btn">管理人员</a>
+              </div>
+              <div class="feature-card">
+                <h3>📝 快速记账</h3>
+                <p>快速添加记录</p>
+                <a href="/quick-add" class="btn">开始记账</a>
+              </div>
+            </div>
+            
+            <div class="error">
+              <h3>⚠️ 如果您看到这个页面</h3>
+              <p>说明Vue应用可能存在JavaScript加载问题。请：</p>
+              <ol style="text-align: left; max-width: 500px; margin: 0 auto;">
+                <li>🔄 刷新页面试试</li>
+                <li>🛠️ 打开开发者工具查看控制台错误</li>
+                <li>🌐 或使用标准版本: <a href="http://localhost:5667/" style="color: #007bff;">http://localhost:5667/</a></li>
+              </ol>
+            </div>
+          `;
+        }
+      }, 3000);
+    </script>
   </body>
 </html>

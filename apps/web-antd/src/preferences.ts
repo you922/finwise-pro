@@ -8,6 +8,8 @@ import { defineOverridesPreferences } from '@vben/preferences';
 export const overridesPreferences = defineOverridesPreferences({
   // overrides
   app: {
-    name: import.meta.env.VITE_APP_TITLE,
+    name: 'Vben Admin Antd', // 固定网站名称，不随语言改变
+    locale: 'zh-CN', // 默认语言为中文
+    theme: 'dark', // 默认深色主题
   },
 });

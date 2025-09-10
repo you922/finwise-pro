@@ -2,9 +2,17 @@ import type { Category, PageParams } from '#/types/finance';
 
 import { categoryService } from '#/api/mock/finance-service';
 
+// 开发环境直接使用Mock服务，生产环境使用HTTP请求
+const isDev = import.meta.env.DEV;
+
 // 获取分类列表
 export async function getCategoryList(params?: PageParams) {
-  return categoryService.getList(params);
+  try {
+    return await categoryService.getList(params);
+  } catch (error) {
+    console.error('Category API Error:', error);
+    throw error;
+  }
 }
 
 // 获取分类详情

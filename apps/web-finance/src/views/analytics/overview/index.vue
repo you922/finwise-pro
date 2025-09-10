@@ -68,20 +68,20 @@ const fetchData = async () => {
     
     // 获取日期范围内的交易数据
     const [transResult, prevTransResult, catResult, personResult] = await Promise.all([
-      transactionApi.getList({
+      transactionApi.getTransactionList({
         page: 1,
         pageSize: 10_000, // 获取所有数据用于统计
-        startDate: dateRangeStrings.value[0],
-        endDate: dateRangeStrings.value[1],
+        dateFrom: dateRangeStrings.value[0],
+        dateTo: dateRangeStrings.value[1],
       }),
-      transactionApi.getList({
+      transactionApi.getTransactionList({
         page: 1,
         pageSize: 10_000,
-        startDate: previousStart.format('YYYY-MM-DD'),
-        endDate: previousEnd.format('YYYY-MM-DD'),
+        dateFrom: previousStart.format('YYYY-MM-DD'),
+        dateTo: previousEnd.format('YYYY-MM-DD'),
       }),
-      categoryApi.getList({ page: 1, pageSize: 100 }),
-      personApi.getList({ page: 1, pageSize: 100 }),
+      categoryApi.getCategoryList({ page: 1, pageSize: 100 }),
+      personApi.getPersonList({ page: 1, pageSize: 100 }),
     ]);
 
     transactions.value = transResult.data.items;
