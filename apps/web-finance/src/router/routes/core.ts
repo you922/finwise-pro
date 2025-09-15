@@ -35,7 +35,7 @@ const coreRoutes: RouteRecordRaw[] = [
     },
     name: 'Root',
     path: '/',
-    redirect: '/analytics/overview',
+    redirect: '/home',
     children: [],
   },
   {
