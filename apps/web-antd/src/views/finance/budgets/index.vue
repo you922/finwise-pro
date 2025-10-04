@@ -265,15 +265,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { 
+import { ref, computed, onMounted } from 'vue';
+import {
   Card, Progress, Button, Modal, Form, Input, Select, Row, Col,
   InputNumber, Slider, Switch, Tag, notification, Dropdown, Menu
 } from 'ant-design-vue';
 
+import { useFinanceStore } from '#/store/finance';
+
 defineOptions({ name: 'BudgetManagement' });
 
-const budgets = ref([]);
+const financeStore = useFinanceStore();
+const budgets = computed(() => financeStore.budgets.filter(b => !b.isDeleted));
 const showAddModal = ref(false);
 const formRef = ref();
 
@@ -406,20 +409,20 @@ const submitBudget = async () => {
   try {
     // 表单验证
     await formRef.value.validate();
-    
+
     // 处理自定义字段
-    const finalCategory = budgetForm.value.category === 'CUSTOM' 
-      ? budgetForm.value.customCategoryName 
+    const finalCategory = budgetForm.value.category === 'CUSTOM'
+      ? budgetForm.value.customCategoryName
       : getCategoryName(budgetForm.value.category);
-      
+
     const finalEmoji = budgetForm.value.category === 'CUSTOM'
       ? budgetForm.value.customCategoryIcon
       : getCategoryEmoji(budgetForm.value.category);
-      
+
     const finalCurrency = budgetForm.value.currency === 'CUSTOM'
       ? `${budgetForm.value.customCurrencyCode} (${budgetForm.value.customCurrencyName})`
       : budgetForm.value.currency;
-    
+
     // 检查分类是否已有预算
     const existingBudget = budgets.value.find(b => b.category === finalCategory);
     if (existingBudget) {
@@ -429,15 +432,14 @@ const submitBudget = async () => {
       });
       return;
     }
-    
+
     // 创建新预算
-    const newBudget = {
-      id: Date.now().toString(),
+    await financeStore.createBudget({
       category: finalCategory,
       emoji: finalEmoji,
       limit: budgetForm.value.limit,
       currency: finalCurrency,
-      spent: 0, // 初始已用金额为0
+      spent: 0,
       remaining: budgetForm.value.limit,
       percentage: 0,
       period: budgetForm.value.period,
@@ -447,23 +449,17 @@ const submitBudget = async () => {
       overspendAlert: budgetForm.value.overspendAlert,
       dailyReminder: budgetForm.value.dailyReminder,
       monthlyTrend: 0,
-      createdAt: new Date().toISOString()
-    };
-    
-    // 添加到预算列表
-    budgets.value.push(newBudget);
-    
+    });
+
     notification.success({
       message: '预算设置成功',
-      description: `${newBudget.category} 预算已成功创建`
+      description: `${finalCategory} 预算已成功创建`
     });
-    
+
     // 关闭模态框
     showAddModal.value = false;
     resetForm();
-    
-    console.log('新增预算:', newBudget);
-    
+
   } catch (error) {
     console.error('表单验证失败:', error);
     notification.error({
@@ -537,17 +533,18 @@ const viewHistory = (budget: any) => {
   });
 };
 
-const deleteBudget = (budget: any) => {
+const deleteBudget = async (budget: any) => {
   console.log('删除预算:', budget);
-  const index = budgets.value.findIndex(b => b.id === budget.id);
-  if (index !== -1) {
-    budgets.value.splice(index, 1);
-    notification.success({
-      message: '预算已删除',
-      description: `${budget.category} 预算已删除`
-    });
-  }
+  await financeStore.deleteBudget(budget.id);
+  notification.success({
+    message: '预算已删除',
+    description: `${budget.category} 预算已删除`
+  });
 };
+
+onMounted(async () => {
+  await financeStore.fetchBudgets();
+});
 </script>
 
 <style scoped>

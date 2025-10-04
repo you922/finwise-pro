@@ -34,4 +34,46 @@ const resetRoutes = () => resetStaticRoutes(router, routes);
 // 创建路由守卫
 createRouterGuard(router);
 
+// Flatten FinWise Pro menu after each route change
+router.afterEach(() => {
+  const flattenFinWiseProMenu = () => {
+    const submenus = document.querySelectorAll('.vben-sub-menu');
+    let finwiseMenu: Element | null = null;
+
+    submenus.forEach(menu => {
+      const titleEl = menu.querySelector('.vben-sub-menu-content__title');
+      if (titleEl?.textContent?.includes('FinWise Pro')) {
+        finwiseMenu = menu;
+      }
+    });
+
+    if (!finwiseMenu) return;
+
+    const parentMenu = finwiseMenu.parentElement;
+    const childrenUL = finwiseMenu.querySelector('.vben-menu');
+
+    if (!childrenUL || !parentMenu) return;
+
+    // Check if already processed
+    if ((finwiseMenu as HTMLElement).getAttribute('data-hide-finwise') === 'true') return;
+
+    // Move all children to the parent menu
+    const children = Array.from(childrenUL.children);
+    children.forEach(child => {
+      parentMenu.insertBefore(child, finwiseMenu);
+    });
+
+    // Mark for hiding via CSS and hide directly
+    (finwiseMenu as HTMLElement).setAttribute('data-hide-finwise', 'true');
+    (finwiseMenu as HTMLElement).style.display = 'none';
+  };
+
+  // Run multiple times to catch menu rendering
+  setTimeout(flattenFinWiseProMenu, 100);
+  setTimeout(flattenFinWiseProMenu, 300);
+  setTimeout(flattenFinWiseProMenu, 500);
+  setTimeout(flattenFinWiseProMenu, 1000);
+  setTimeout(flattenFinWiseProMenu, 2000);
+});
+
 export { resetRoutes, router };

@@ -33,6 +33,8 @@ defineEmits(['click']);
     <CardContent class="flex flex-wrap p-0">
       <template v-for="(item, index) in items" :key="item.title">
         <div
+          :data-nav-title="item.title"
+          :data-nav-url="item.url ?? ''"
           :class="{
             'border-r-0': index % 3 === 2,
             'border-b-0': index < 3,

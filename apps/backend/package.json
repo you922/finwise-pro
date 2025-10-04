@@ -1,0 +1,23 @@
+{
+  "name": "@vben/backend",
+  "version": "0.0.1",
+  "description": "",
+  "private": true,
+  "license": "MIT",
+  "author": "",
+  "scripts": {
+    "build": "nitro build",
+    "start": "nitro dev",
+    "import:data": "node scripts/import-finance-data.js"
+  },
+  "dependencies": {
+    "@faker-js/faker": "catalog:",
+    "better-sqlite3": "9.5.0",
+    "jsonwebtoken": "catalog:",
+    "nitropack": "catalog:"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "catalog:",
+    "h3": "catalog:"
+  }
+}

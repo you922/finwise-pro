@@ -8,17 +8,6 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card title="🔧 基本设置">
         <Form :model="settings" layout="vertical">
-          <Form.Item label="默认货币">
-            <Select v-model:value="settings.defaultCurrency" style="width: 100%" @change="saveCurrencySettings">
-              <Select.Option value="CNY">🇨🇳 人民币 (CNY)</Select.Option>
-              <Select.Option value="USD">🇺🇸 美元 (USD)</Select.Option>
-              <Select.Option value="EUR">🇪🇺 欧元 (EUR)</Select.Option>
-              <Select.Option value="JPY">🇯🇵 日元 (JPY)</Select.Option>
-              <Select.Option value="GBP">🇬🇧 英镑 (GBP)</Select.Option>
-            </Select>
-          </Form.Item>
-          
-
           <Divider>通知设置</Divider>
           
           <div class="space-y-3">

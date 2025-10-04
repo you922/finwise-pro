@@ -1,8 +1,8 @@
 {
   "folders": [
     {
-      "name": "@vben/backend-mock",
-      "path": "apps/backend-mock",
+      "name": "@vben/backend",
+      "path": "apps/backend",
     },
     {
       "name": "@vben/web-antd",
@@ -11,10 +11,6 @@
     {
       "name": "@vben/web-ele",
       "path": "apps/web-ele",
-    },
-    {
-      "name": "@vben/web-finance",
-      "path": "apps/web-finance",
     },
     {
       "name": "@vben/web-naive",

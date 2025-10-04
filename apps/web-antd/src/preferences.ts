@@ -11,5 +11,15 @@ export const overridesPreferences = defineOverridesPreferences({
     name: 'Vben Admin Antd', // 固定网站名称，不随语言改变
     locale: 'zh-CN', // 默认语言为中文
     theme: 'dark', // 默认深色主题
+    defaultHomePath: '/dashboard-finance', // 默认首页改为财务仪表板
+  },
+  sidebar: {
+    collapsed: false, // 侧边栏默认展开
+    expandOnHover: false, // 禁用悬停展开
+    enable: true, // 启用侧边栏
+    width: 230, // 设置侧边栏宽度
+    collapsedWidth: 230, // 收起时的宽度也设为正常宽度，防止收起
+    extraCollapse: false, // 禁用额外的收起功能
+    collapsedButton: false, // 禁用折叠按钮
   },
 });

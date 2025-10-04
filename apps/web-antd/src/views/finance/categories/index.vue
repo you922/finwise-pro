@@ -16,33 +16,23 @@
           <div v-for="category in categories" :key="category.id" class="p-4 border rounded-lg hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-3">
-                <span class="text-xl" :style="{ color: category.color }">{{ category.emoji }}</span>
+                <span class="text-2xl">{{ category.icon }}</span>
                 <div>
                   <span class="font-medium text-lg">{{ category.name }}</span>
                   <div class="flex items-center space-x-2 mt-1">
                     <Tag :color="category.type === 'income' ? 'green' : 'red'" size="small">
                       {{ category.type === 'income' ? '📈 收入' : '📉 支出' }}
                     </Tag>
-                    <Tag size="small">{{ category.count }}笔交易</Tag>
-                    <Tag v-if="category.budget > 0" color="blue" size="small">
-                      预算{{ category.budget.toLocaleString() }} {{ category.budgetCurrency || 'CNY' }}
-                    </Tag>
+                    <Tag v-if="category.isSystem" color="blue" size="small">系统分类</Tag>
                   </div>
                 </div>
               </div>
               <div class="text-right">
-                <p class="text-lg font-semibold" :class="category.type === 'income' ? 'text-green-600' : 'text-red-600'">
-                  {{ category.amount.toLocaleString('zh-CN', { style: 'currency', currency: 'CNY' }) }}
-                </p>
-                <div class="mt-2 space-x-2">
+                <div class="space-x-2">
                   <Button type="link" size="small" @click="editCategory(category)">✏️ 编辑</Button>
-                  <Button type="link" size="small" @click="setBudget(category)">🎯 预算</Button>
-                  <Button type="link" size="small" danger @click="deleteCategory(category)">🗑️ 删除</Button>
+                  <Button type="link" size="small" danger @click="deleteCategory(category)" :disabled="category.isSystem">🗑️ 删除</Button>
                 </div>
               </div>
-            </div>
-            <div v-if="category.description" class="mt-2 text-sm text-gray-500">
-              {{ category.description }}
             </div>
           </div>
         </div>
@@ -80,12 +70,13 @@
           <div class="space-y-2">
             <h4 class="font-medium">📈 收入分类</h4>
             <div class="space-y-2">
-              <div v-for="category in incomeCategories" :key="category.id" 
+              <div v-for="category in incomeCategories" :key="category.id"
                    class="flex items-center justify-between p-2 bg-green-50 rounded">
-                <span>{{ category.emoji }} {{ category.name }}</span>
-                <span class="text-green-600 font-medium">
-                  {{ category.amount.toLocaleString('zh-CN', { style: 'currency', currency: 'CNY' }) }}
-                </span>
+                <div class="flex items-center space-x-2">
+                  <span>{{ category.icon }}</span>
+                  <span>{{ category.name }}</span>
+                </div>
+                <Tag :color="category.color" size="small">{{ category.isSystem ? '系统' : '自定义' }}</Tag>
               </div>
               <div v-if="incomeCategories.length === 0" class="text-center text-gray-500 py-2">
                 暂无收入分类
@@ -94,12 +85,13 @@
 
             <h4 class="font-medium mt-4">📉 支出分类</h4>
             <div class="space-y-2">
-              <div v-for="category in expenseCategories" :key="category.id" 
+              <div v-for="category in expenseCategories" :key="category.id"
                    class="flex items-center justify-between p-2 bg-red-50 rounded">
-                <span>{{ category.emoji }} {{ category.name }}</span>
-                <span class="text-red-600 font-medium">
-                  {{ category.amount.toLocaleString('zh-CN', { style: 'currency', currency: 'CNY' }) }}
-                </span>
+                <div class="flex items-center space-x-2">
+                  <span>{{ category.icon }}</span>
+                  <span>{{ category.name }}</span>
+                </div>
+                <Tag :color="category.color" size="small">{{ category.isSystem ? '系统' : '自定义' }}</Tag>
               </div>
               <div v-if="expenseCategories.length === 0" class="text-center text-gray-500 py-2">
                 暂无支出分类
@@ -110,10 +102,73 @@
       </Card>
     </div>
 
+    <!-- 编辑分类模态框 -->
+    <Modal
+      v-model:open="showEditModal"
+      title="✏️ 编辑分类"
+      @ok="submitEditCategory"
+      @cancel="() => { showEditModal = false; editingCategory = null; }"
+      width="500px"
+    >
+      <Form
+        ref="editFormRef"
+        :model="editForm"
+        :rules="rules"
+        layout="vertical"
+        class="mt-4"
+      >
+        <Form.Item label="分类名称" name="name" required>
+          <Input
+            v-model:value="editForm.name"
+            placeholder="请输入分类名称"
+            size="large"
+          />
+        </Form.Item>
+
+        <Form.Item label="图标" name="icon">
+          <Select v-model:value="editForm.icon" placeholder="选择图标" size="large">
+            <Select.Option value="🍽️">🍽️ 餐饮</Select.Option>
+            <Select.Option value="🚗">🚗 交通</Select.Option>
+            <Select.Option value="🛒">🛒 购物</Select.Option>
+            <Select.Option value="🎮">🎮 娱乐</Select.Option>
+            <Select.Option value="💻">💻 软件订阅</Select.Option>
+            <Select.Option value="📊">📊 投资</Select.Option>
+            <Select.Option value="🏥">🏥 医疗</Select.Option>
+            <Select.Option value="🏠">🏠 住房</Select.Option>
+            <Select.Option value="📚">📚 教育</Select.Option>
+            <Select.Option value="💰">💰 工资</Select.Option>
+            <Select.Option value="🎁">🎁 奖金</Select.Option>
+            <Select.Option value="💼">💼 副业</Select.Option>
+            <Select.Option value="CUSTOM">➕ 自定义图标</Select.Option>
+          </Select>
+        </Form.Item>
+
+        <!-- 自定义图标输入 -->
+        <div v-if="editForm.icon === 'CUSTOM'" class="mb-4">
+          <Form.Item label="自定义图标" required>
+            <Input v-model:value="editForm.customIcon" placeholder="请输入一个表情符号，如: 🍕, 🎬, 📚 等" />
+          </Form.Item>
+        </div>
+
+        <Form.Item label="分类颜色">
+          <div class="flex space-x-2">
+            <div
+              v-for="color in categoryColors"
+              :key="color"
+              class="w-8 h-8 rounded-full cursor-pointer border-2 hover:scale-110 transition-all"
+              :class="editForm.color === color ? 'border-gray-800 scale-110' : 'border-gray-300'"
+              :style="{ backgroundColor: color }"
+              @click="editForm.color = color"
+            ></div>
+          </div>
+        </Form.Item>
+      </Form>
+    </Modal>
+
     <!-- 添加分类模态框 -->
-    <Modal 
-      v-model:open="showAddModal" 
-      title="➕ 添加新分类" 
+    <Modal
+      v-model:open="showAddModal"
+      title="➕ 添加新分类"
       @ok="submitCategory"
       @cancel="cancelAdd"
       width="500px"
@@ -236,17 +291,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { 
-  Card, Tag, Button, Modal, Form, Input, Select, Row, Col, 
-  InputNumber, notification 
+import { ref, computed, onMounted } from 'vue';
+import {
+  Card, Tag, Button, Modal, Form, Input, Select, Row, Col,
+  InputNumber, notification
 } from 'ant-design-vue';
+
+import { useFinanceStore } from '#/store/finance';
 
 defineOptions({ name: 'CategoryManagement' });
 
-const categories = ref([]);
+const financeStore = useFinanceStore();
+
+// 使用 financeStore 的分类数据
+const categories = computed(() => {
+  return [...financeStore.incomeCategories, ...financeStore.expenseCategories];
+});
+
+// 初始化时加载数据
+onMounted(async () => {
+  await financeStore.fetchCategories();
+});
 const showAddModal = ref(false);
+const showEditModal = ref(false);
+const editingCategory = ref<any>(null);
 const formRef = ref();
+const editFormRef = ref();
 
 // 表单数据
 const categoryForm = ref({
@@ -259,6 +329,14 @@ const categoryForm = ref({
   customCurrencyCode: '',
   customCurrencyName: '',
   description: '',
+  color: '#1890ff'
+});
+
+// 编辑表单数据
+const editForm = ref({
+  name: '',
+  icon: '🏷️',
+  customIcon: '',
   color: '#1890ff'
 });
 
@@ -283,12 +361,12 @@ const rules = {
 const categoryStats = computed(() => {
   const incomeCategories = categories.value.filter(c => c.type === 'income');
   const expenseCategories = categories.value.filter(c => c.type === 'expense');
-  
+
   return {
     total: categories.value.length,
     income: incomeCategories.length,
     expense: expenseCategories.length,
-    budgetTotal: categories.value.reduce((sum, c) => sum + (c.budget || 0), 0)
+    budgetTotal: 0 // 预算功能待实现
   };
 });
 
@@ -311,48 +389,31 @@ const submitCategory = async () => {
   try {
     // 表单验证
     await formRef.value.validate();
-    
-    // 处理自定义字段
-    const finalIcon = categoryForm.value.icon === 'CUSTOM' 
-      ? categoryForm.value.customIcon 
+
+    // 处理自定义图标
+    const finalIcon = categoryForm.value.icon === 'CUSTOM'
+      ? categoryForm.value.customIcon
       : categoryForm.value.icon;
-      
-    const finalBudgetCurrency = categoryForm.value.budgetCurrency === 'CUSTOM'
-      ? `${categoryForm.value.customCurrencyCode} (${categoryForm.value.customCurrencyName})`
-      : categoryForm.value.budgetCurrency;
-    
-    // 创建新分类
-    const newCategory = {
-      id: Date.now().toString(),
+
+    // 调用 store 创建分类
+    await financeStore.createCategory({
       name: categoryForm.value.name,
       type: categoryForm.value.type,
       icon: finalIcon,
-      budget: categoryForm.value.budget || 0,
-      budgetCurrency: finalBudgetCurrency,
-      description: categoryForm.value.description,
       color: categoryForm.value.color,
-      count: 0, // 交易数量
-      amount: 0, // 总金额
-      createdAt: new Date().toISOString(),
-      emoji: finalIcon
-    };
-    
-    // 添加到分类列表
-    categories.value.push(newCategory);
-    
+    });
+
     notification.success({
       message: '分类添加成功',
-      description: `分类 "${newCategory.name}" 已成功创建`
+      description: `分类 "${categoryForm.value.name}" 已成功创建`
     });
-    
+
     // 关闭模态框
     showAddModal.value = false;
     resetForm();
-    
-    console.log('新增分类:', newCategory);
-    
+
   } catch (error) {
-    console.error('表单验证失败:', error);
+    console.error('创建分类失败:', error);
     notification.error({
       message: '添加失败',
       description: '请检查表单信息是否正确'
@@ -396,23 +457,81 @@ const handleBudgetCurrencyChange = (currency: string) => {
 };
 
 const editCategory = (category: any) => {
-  console.log('编辑分类:', category);
-  notification.info({
-    message: '编辑功能',
-    description: `编辑分类 "${category.name}"`
-  });
+  editingCategory.value = category;
+  editForm.value = {
+    name: category.name,
+    icon: category.icon,
+    customIcon: '',
+    color: category.color || '#1890ff',
+  };
+  showEditModal.value = true;
+};
+
+const submitEditCategory = async () => {
+  try {
+    await editFormRef.value?.validate();
+
+    // 处理自定义图标
+    const finalIcon = editForm.value.icon === 'CUSTOM'
+      ? editForm.value.customIcon
+      : editForm.value.icon;
+
+    // 调用 store 更新分类
+    await financeStore.updateCategory(editingCategory.value.id, {
+      name: editForm.value.name,
+      icon: finalIcon,
+      color: editForm.value.color,
+    });
+
+    notification.success({
+      message: '分类更新成功',
+      description: `分类 "${editForm.value.name}" 已更新`
+    });
+
+    showEditModal.value = false;
+    editingCategory.value = null;
+
+  } catch (error) {
+    console.error('更新分类失败:', error);
+    notification.error({
+      message: '更新失败',
+      description: '请检查表单信息是否正确'
+    });
+  }
 };
 
 const deleteCategory = (category: any) => {
-  console.log('删除分类:', category);
-  const index = categories.value.findIndex(c => c.id === category.id);
-  if (index !== -1) {
-    categories.value.splice(index, 1);
-    notification.success({
-      message: '分类已删除',
-      description: `分类 "${category.name}" 已删除`
+  // 系统分类不允许删除
+  if (category.isSystem) {
+    notification.warning({
+      message: '无法删除',
+      description: '系统分类不允许删除'
     });
+    return;
   }
+
+  Modal.confirm({
+    title: '确认删除',
+    content: `确定要删除分类 "${category.name}" 吗？此操作不可恢复。`,
+    okText: '确定',
+    cancelText: '取消',
+    okType: 'danger',
+    onOk: async () => {
+      try {
+        await financeStore.deleteCategory(category.id);
+        notification.success({
+          message: '分类已删除',
+          description: `分类 "${category.name}" 已删除`
+        });
+      } catch (error) {
+        console.error('删除分类失败:', error);
+        notification.error({
+          message: '删除失败',
+          description: '删除分类时出错，请稍后重试'
+        });
+      }
+    }
+  });
 };
 
 const setBudget = (category: any) => {

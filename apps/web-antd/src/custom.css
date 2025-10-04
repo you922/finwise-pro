@@ -1,0 +1,14 @@
+/* Hide FinWise Pro parent menu and move children */
+.vben-sub-menu:has(.vben-sub-menu-content__title:is(:contains("FinWise Pro"), :contains("💎"))) {
+  display: none !important;
+}
+
+/* Alternative approach using attribute selector if :contains doesn't work */
+.vben-sub-menu .vben-sub-menu-content__title {
+  /* We'll use JavaScript to add a data attribute to the parent */
+}
+
+/* Mark submenu for hiding */
+.vben-sub-menu[data-hide-finwise="true"] {
+  display: none !important;
+}
