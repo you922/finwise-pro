@@ -4,7 +4,11 @@ const routes: RouteRecordRaw[] = [
   {
     name: 'Workspace',
     path: '/workspace',
-    redirect: '/dashboard-finance',
+    component: () => import('#/views/dashboard/workspace/index.vue'),
+    meta: {
+      icon: 'carbon:workspace',
+      title: 'Workspace',
+    },
   },
 ];
 
