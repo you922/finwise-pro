@@ -11,7 +11,7 @@ export const overridesPreferences = defineOverridesPreferences({
     name: 'Vben Admin Antd', // 固定网站名称，不随语言改变
     locale: 'zh-CN', // 默认语言为中文
     theme: 'dark', // 默认深色主题
-    defaultHomePath: '/dashboard-finance', // 默认首页改为财务仪表板
+    defaultHomePath: '/workspace', // 设置默认首页为workspace
   },
   sidebar: {
     collapsed: false, // 侧边栏默认展开
