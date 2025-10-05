@@ -1398,7 +1398,9 @@ const _handleAccountChange = (account: string) => {
         <div class="flex space-x-2">
           <Button @click="openRecycleBin">
             🗑️ 回收站
-            <span v-if="deletedTransactions.length > 0" class="ml-1">({{ deletedTransactions.length }})</span>
+            <span v-if="deletedTransactions.length > 0" class="ml-1"
+              >({{ deletedTransactions.length }})</span
+            >
           </Button>
           <Button type="primary" @click="quickAddIncome"> 💰 添加收入 </Button>
           <Button @click="quickAddExpense"> 💸 添加支出 </Button>
@@ -1526,7 +1528,9 @@ const _handleAccountChange = (account: string) => {
           <Row :gutter="16">
             <Col :span="12">
               <div class="mb-4">
-                <label class="mb-2 block text-sm font-medium">货币类型 <span class="text-red-500">*</span></label>
+                <label class="mb-2 block text-sm font-medium"
+                  >货币类型 <span class="text-red-500">*</span></label
+                >
                 <Radio.Group
                   v-model:value="quickIncomeForm.currency"
                   size="large"
@@ -1581,7 +1585,9 @@ const _handleAccountChange = (account: string) => {
               </InputNumber>
             </Col>
             <Col :span="8">
-              <label class="mb-2 block text-sm font-medium">总金额 <span class="text-red-500">*</span></label>
+              <label class="mb-2 block text-sm font-medium"
+                >总金额 <span class="text-red-500">*</span></label
+              >
               <InputNumber
                 v-model:value="quickIncomeForm.amount"
                 :min="0"
@@ -1599,7 +1605,9 @@ const _handleAccountChange = (account: string) => {
           <!-- 直接输入金额模式 -->
           <Row v-else :gutter="16" class="mb-4">
             <Col :span="24">
-              <label class="mb-2 block text-sm font-medium">金额 <span class="text-red-500">*</span></label>
+              <label class="mb-2 block text-sm font-medium"
+                >金额 <span class="text-red-500">*</span></label
+              >
               <InputNumber
                 v-model:value="quickIncomeForm.amount"
                 :min="0"
@@ -1640,7 +1648,9 @@ const _handleAccountChange = (account: string) => {
           </Row>
 
           <div>
-            <label class="mb-2 block text-sm font-medium">收入账户 <span class="text-red-500">*</span></label>
+            <label class="mb-2 block text-sm font-medium"
+              >收入账户 <span class="text-red-500">*</span></label
+            >
             <Radio.Group
               v-model:value="quickIncomeForm.accountId"
               size="large"
@@ -2382,7 +2392,9 @@ const _handleAccountChange = (account: string) => {
                   </Select>
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium">币种字段（可选，默认USD）</label>
+                  <label class="mb-1 block text-sm font-medium"
+                    >币种字段（可选，默认USD）</label
+                  >
                   <Select
                     v-model:value="importMapping.currency"
                     placeholder="选择对应列"

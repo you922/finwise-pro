@@ -32,7 +32,7 @@
     <div id="app"></div>
     <script>
       // Flatten FinWise Pro menu - Remove parent menu and show children directly
-      (function() {
+      (function () {
         console.log('[FinWise] Script loaded');
 
         function flattenFinWiseProMenu() {
@@ -41,7 +41,7 @@
           console.log('[FinWise] Found submenus:', submenus.length);
           let finwiseMenu = null;
 
-          submenus.forEach(menu => {
+          submenus.forEach((menu) => {
             const titleEl = menu.querySelector('.vben-sub-menu-content__title');
             if (titleEl && titleEl.textContent) {
               console.log('[FinWise] Menu title:', titleEl.textContent.trim());
@@ -74,7 +74,7 @@
           // Move all children to the parent menu
           const children = Array.from(childrenUL.children);
           console.log('[FinWise] Moving', children.length, 'children');
-          children.forEach(child => {
+          children.forEach((child) => {
             parentMenu.insertBefore(child, finwiseMenu);
           });
 
@@ -84,28 +84,30 @@
         }
 
         // Run after DOM loads
-        const delays = [500, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000];
+        const delays = [
+          500, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000,
+        ];
         console.log('[FinWise] Setting up delays:', delays);
 
         if (document.readyState === 'loading') {
           console.log('[FinWise] Waiting for DOMContentLoaded');
-          document.addEventListener('DOMContentLoaded', function() {
+          document.addEventListener('DOMContentLoaded', function () {
             console.log('[FinWise] DOMContentLoaded fired');
-            delays.forEach(delay => {
+            delays.forEach((delay) => {
               setTimeout(flattenFinWiseProMenu, delay);
             });
           });
         } else {
           console.log('[FinWise] DOM already loaded');
-          delays.forEach(delay => {
+          delays.forEach((delay) => {
             setTimeout(flattenFinWiseProMenu, delay);
           });
         }
 
         // Watch for DOM changes
-        setTimeout(function() {
+        setTimeout(function () {
           console.log('[FinWise] Setting up MutationObserver');
-          const observer = new MutationObserver(function() {
+          const observer = new MutationObserver(function () {
             setTimeout(flattenFinWiseProMenu, 200);
           });
 
@@ -113,7 +115,7 @@
           if (body) {
             observer.observe(body, {
               childList: true,
-              subtree: true
+              subtree: true,
             });
             console.log('[FinWise] MutationObserver active');
           }

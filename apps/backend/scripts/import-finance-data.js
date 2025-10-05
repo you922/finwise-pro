@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
+
 const Database = require('better-sqlite3');
 
 const args = process.argv.slice(2);
@@ -110,7 +111,7 @@ db.exec(`
   );
 `);
 
-const RAW_TEXT = fs.readFileSync(inputPath, 'utf-8').replace(/^\ufeff/, '');
+const RAW_TEXT = fs.readFileSync(inputPath, 'utf8').replace(/^\uFEFF/, '');
 const lines = RAW_TEXT.split(/\r?\n/).filter((line) => line.trim().length > 0);
 if (lines.length <= 1) {
   console.error('CSV 文件内容为空');
@@ -126,7 +127,14 @@ const ACCOUNT_IDX = header.indexOf('支出人');
 const CATEGORY_IDX = header.indexOf('计入');
 const SHARE_IDX = header.indexOf('阿德应得分红');
 
-if (DATE_IDX === -1 || PROJECT_IDX === -1 || TYPE_IDX === -1 || AMOUNT_IDX === -1 || ACCOUNT_IDX === -1 || CATEGORY_IDX === -1) {
+if (
+  DATE_IDX === -1 ||
+  PROJECT_IDX === -1 ||
+  TYPE_IDX === -1 ||
+  AMOUNT_IDX === -1 ||
+  ACCOUNT_IDX === -1 ||
+  CATEGORY_IDX === -1
+) {
   console.error('CSV 表头缺少必需字段');
   process.exit(1);
 }
@@ -138,9 +146,27 @@ const CURRENCIES = [
 ];
 
 const EXCHANGE_RATES = [
-  { fromCurrency: 'CNY', toCurrency: 'CNY', rate: 1, date: `${baseYear}-01-01`, source: 'system' },
-  { fromCurrency: 'USD', toCurrency: 'CNY', rate: 7.14, date: `${baseYear}-01-01`, source: 'manual' },
-  { fromCurrency: 'THB', toCurrency: 'CNY', rate: 0.2, date: `${baseYear}-01-01`, source: 'manual' },
+  {
+    fromCurrency: 'CNY',
+    toCurrency: 'CNY',
+    rate: 1,
+    date: `${baseYear}-01-01`,
+    source: 'system',
+  },
+  {
+    fromCurrency: 'USD',
+    toCurrency: 'CNY',
+    rate: 7.14,
+    date: `${baseYear}-01-01`,
+    source: 'manual',
+  },
+  {
+    fromCurrency: 'THB',
+    toCurrency: 'CNY',
+    rate: 0.2,
+    date: `${baseYear}-01-01`,
+    source: 'manual',
+  },
 ];
 
 const DEFAULT_EXPENSE_CATEGORY = '未分类支出';
@@ -178,7 +204,12 @@ function inferCurrency(accountName, amountText) {
   const name = accountName ?? '';
   const text = `${name}${amountText ?? ''}`;
   const lower = text.toLowerCase();
-  if (lower.includes('美金') || lower.includes('usd') || lower.includes('u$') || lower.includes('u ')) {
+  if (
+    lower.includes('美金') ||
+    lower.includes('usd') ||
+    lower.includes('u$') ||
+    lower.includes('u ')
+  ) {
     return 'USD';
   }
   if (lower.includes('泰铢') || lower.includes('thb')) {
@@ -190,7 +221,9 @@ function inferCurrency(accountName, amountText) {
 function parseAmount(raw) {
   if (!raw) return 0;
   const matches = String(raw)
-    .replace(/[^0-9.+-]/g, (char) => (char === '+' || char === '-' ? char : ' '))
+    .replaceAll(/[^0-9.+-]/g, (char) =>
+      char === '+' || char === '-' ? char : ' ',
+    )
     .match(/[-+]?\d+(?:\.\d+)?/g);
   if (!matches) return 0;
   return matches.map(Number).reduce((sum, value) => sum + value, 0);
@@ -205,10 +238,18 @@ function normalizeDate(value, monthTracker) {
   const month = Number(match[1]);
   const day = Number(match[2]);
   let year = baseYear;
-  if (monthTracker.lastMonth !== null && month > monthTracker.lastMonth && monthTracker.wrapped) {
+  if (
+    monthTracker.lastMonth !== null &&
+    month > monthTracker.lastMonth &&
+    monthTracker.wrapped
+  ) {
     year -= 1;
   }
-  if (monthTracker.lastMonth !== null && month < monthTracker.lastMonth && !monthTracker.wrapped) {
+  if (
+    monthTracker.lastMonth !== null &&
+    month < monthTracker.lastMonth &&
+    !monthTracker.wrapped
+  ) {
     monthTracker.wrapped = true;
   }
   monthTracker.lastMonth = month;
@@ -231,12 +272,25 @@ const insertCategory = db.prepare(`
 
 db.transaction(() => {
   if (!categoryMap.has(`${DEFAULT_INCOME_CATEGORY}-income`)) {
-    const info = insertCategory.run({ name: DEFAULT_INCOME_CATEGORY, type: 'income', icon: '💰', color: '#10b981' });
+    const info = insertCategory.run({
+      name: DEFAULT_INCOME_CATEGORY,
+      type: 'income',
+      icon: '💰',
+      color: '#10b981',
+    });
     categoryMap.set(`${DEFAULT_INCOME_CATEGORY}-income`, info.lastInsertRowid);
   }
   if (!categoryMap.has(`${DEFAULT_EXPENSE_CATEGORY}-expense`)) {
-    const info = insertCategory.run({ name: DEFAULT_EXPENSE_CATEGORY, type: 'expense', icon: '🏷️', color: '#6366f1' });
-    categoryMap.set(`${DEFAULT_EXPENSE_CATEGORY}-expense`, info.lastInsertRowid);
+    const info = insertCategory.run({
+      name: DEFAULT_EXPENSE_CATEGORY,
+      type: 'expense',
+      icon: '🏷️',
+      color: '#6366f1',
+    });
+    categoryMap.set(
+      `${DEFAULT_EXPENSE_CATEGORY}-expense`,
+      info.lastInsertRowid,
+    );
   }
 })();
 
@@ -261,20 +315,26 @@ for (let i = 1; i < lines.length; i += 1) {
   const amountRaw = row[AMOUNT_IDX].trim();
   const accountNameRaw = row[ACCOUNT_IDX].trim();
   const categoryRaw = row[CATEGORY_IDX].trim();
-  const shareRaw = SHARE_IDX >= 0 ? row[SHARE_IDX].trim() : '';
+  const shareRaw = SHARE_IDX === -1 ? '' : row[SHARE_IDX].trim();
 
   const amount = parseAmount(amountRaw);
   if (!amount) {
     continue;
   }
 
-  const normalizedType = typeText.includes('收') && !typeText.includes('支') ? 'income' : 'expense';
+  const normalizedType =
+    typeText.includes('收') && !typeText.includes('支') ? 'income' : 'expense';
   const accountName = accountNameRaw || '美金现金';
   const currency = inferCurrency(accountNameRaw, amountRaw);
 
   if (!accountMap.has(accountName)) {
     const icon = currency === 'USD' ? '💵' : currency === 'THB' ? '💱' : '💰';
-    const color = currency === 'USD' ? '#1677ff' : currency === 'THB' ? '#22c55e' : '#6366f1';
+    const color =
+      currency === 'USD'
+        ? '#1677ff'
+        : currency === 'THB'
+          ? '#22c55e'
+          : '#6366f1';
     const info = insertAccount.run({
       name: accountName,
       currency,
@@ -285,7 +345,11 @@ for (let i = 1; i < lines.length; i += 1) {
     accountMap.set(accountName, Number(info.lastInsertRowid));
   }
 
-  const categoryName = categoryRaw || (normalizedType === 'income' ? DEFAULT_INCOME_CATEGORY : DEFAULT_EXPENSE_CATEGORY);
+  const categoryName =
+    categoryRaw ||
+    (normalizedType === 'income'
+      ? DEFAULT_INCOME_CATEGORY
+      : DEFAULT_EXPENSE_CATEGORY);
   const categoryKey = `${categoryName}-${normalizedType}`;
   if (!categoryMap.has(categoryKey)) {
     const icon = normalizedType === 'income' ? '💰' : '🏷️';
@@ -360,4 +424,6 @@ const insertMany = db.transaction((items) => {
 
 insertMany(transactions);
 
-console.log(`已导入 ${transactions.length} 条交易，账户 ${accountMap.size} 个，分类 ${categoryMap.size} 个。`);
+console.log(
+  `已导入 ${transactions.length} 条交易，账户 ${accountMap.size} 个，分类 ${categoryMap.size} 个。`,
+);

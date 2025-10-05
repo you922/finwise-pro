@@ -1,5 +1,4 @@
 import { getQuery } from 'h3';
-
 import { listExchangeRates } from '~/utils/finance-metadata';
 import { useResponseSuccess } from '~/utils/response';
 
@@ -22,7 +21,10 @@ export default defineEventHandler(async (event) => {
   if (date) {
     rates = rates.filter((rate) => rate.date === date);
   } else if (rates.length > 0) {
-    const latestDate = rates.reduce((max, rate) => (rate.date > max ? rate.date : max), rates[0].date);
+    const latestDate = rates.reduce(
+      (max, rate) => Math.max(rate.date, max),
+      rates[0].date,
+    );
     rates = rates.filter((rate) => rate.date === latestDate);
   }
 

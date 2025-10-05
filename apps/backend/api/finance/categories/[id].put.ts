@@ -1,5 +1,4 @@
 import { getRouterParam, readBody } from 'h3';
-
 import { updateCategoryRecord } from '~/utils/finance-metadata';
 import { useResponseError, useResponseSuccess } from '~/utils/response';
 

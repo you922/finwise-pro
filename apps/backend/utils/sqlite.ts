@@ -1,5 +1,6 @@
-import Database from 'better-sqlite3';
 import { mkdirSync } from 'node:fs';
+
+import Database from 'better-sqlite3';
 import { dirname, join } from 'pathe';
 
 const dbFile = join(process.cwd(), 'storage', 'finance.db');

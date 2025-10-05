@@ -2,6 +2,7 @@ import { initPreferences } from '@vben/preferences';
 import { unmountGlobalLoading } from '@vben/utils';
 
 import { overridesPreferences } from './preferences';
+
 import './custom.css';
 
 /**
@@ -36,7 +37,7 @@ function flattenFinWiseProMenu() {
   const submenus = document.querySelectorAll('.vben-sub-menu');
   let finwiseMenu: Element | null = null;
 
-  submenus.forEach(menu => {
+  submenus.forEach((menu) => {
     const titleEl = menu.querySelector('.vben-sub-menu-content__title');
     if (titleEl?.textContent?.includes('FinWise Pro')) {
       finwiseMenu = menu;
@@ -51,16 +52,17 @@ function flattenFinWiseProMenu() {
   if (!childrenUL || !parentMenu) return;
 
   // Check if already processed
-  if ((finwiseMenu as HTMLElement).getAttribute('data-hide-finwise') === 'true') return;
+  if ((finwiseMenu as HTMLElement).dataset.hideFinwise === 'true')
+    return;
 
   // Move all children to the parent menu
-  const children = Array.from(childrenUL.children);
-  children.forEach(child => {
-    parentMenu.insertBefore(child, finwiseMenu);
+  const children = [...childrenUL.children];
+  children.forEach((child) => {
+    finwiseMenu.before(child);
   });
 
   // Mark for hiding via CSS and hide directly
-  (finwiseMenu as HTMLElement).setAttribute('data-hide-finwise', 'true');
+  (finwiseMenu as HTMLElement).dataset.hideFinwise = 'true';
   (finwiseMenu as HTMLElement).style.display = 'none';
 }
 
@@ -91,7 +93,7 @@ setTimeout(() => {
   if (body) {
     observer.observe(body, {
       childList: true,
-      subtree: true
+      subtree: true,
     });
   }
 }, 500);

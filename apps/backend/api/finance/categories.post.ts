@@ -1,5 +1,4 @@
 import { readBody } from 'h3';
-
 import { createCategoryRecord } from '~/utils/finance-metadata';
 import { useResponseError, useResponseSuccess } from '~/utils/response';
 

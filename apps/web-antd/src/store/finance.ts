@@ -1,5 +1,6 @@
-import { defineStore } from 'pinia';
 import { ref } from 'vue';
+
+import { defineStore } from 'pinia';
 
 import { FinanceApi } from '#/api/core/finance';
 
@@ -50,10 +51,10 @@ export const useFinanceStore = defineStore('finance', () => {
 
   // 创建分类
   async function createCategory(data: {
-    name: string;
-    type: 'income' | 'expense';
-    icon?: string;
     color?: string;
+    icon?: string;
+    name: string;
+    type: 'expense' | 'income';
   }) {
     const category = await FinanceApi.createCategory(data);
     if (!category) {
@@ -71,9 +72,9 @@ export const useFinanceStore = defineStore('finance', () => {
   async function updateCategory(
     id: number,
     data: {
-      name?: string;
-      icon?: string;
       color?: string;
+      icon?: string;
+      name?: string;
       sortOrder?: number;
     },
   ) {
@@ -97,13 +98,13 @@ export const useFinanceStore = defineStore('finance', () => {
     await FinanceApi.deleteCategory(id);
     // 从本地列表中移除
     let index = incomeCategories.value.findIndex((c) => c.id === id);
-    if (index !== -1) {
-      incomeCategories.value.splice(index, 1);
-    } else {
+    if (index === -1) {
       index = expenseCategories.value.findIndex((c) => c.id === id);
       if (index !== -1) {
         expenseCategories.value.splice(index, 1);
       }
+    } else {
+      incomeCategories.value.splice(index, 1);
     }
   }
 

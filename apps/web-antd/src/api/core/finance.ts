@@ -13,9 +13,9 @@ export namespace FinanceApi {
   // 分类
   export interface Category {
     id: number;
-    userId?: number | null;
+    userId?: null | number;
     name: string;
-    type: 'income' | 'expense';
+    type: 'expense' | 'income';
     icon: string;
     color: string;
     sortOrder?: number;
@@ -28,7 +28,14 @@ export namespace FinanceApi {
     id: number;
     userId?: number;
     name: string;
-    type: 'cash' | 'bank' | 'alipay' | 'wechat' | 'virtual_wallet' | 'investment' | 'credit_card';
+    type:
+      | 'alipay'
+      | 'bank'
+      | 'cash'
+      | 'credit_card'
+      | 'investment'
+      | 'virtual_wallet'
+      | 'wechat';
     currency: string;
     balance?: number;
     icon?: string;
@@ -43,20 +50,20 @@ export namespace FinanceApi {
     toCurrency: string;
     rate: number;
     date: string;
-    source: 'manual' | 'api' | 'system';
+    source: 'api' | 'manual' | 'system';
   }
 
   // 交易
   export interface Transaction {
     id: number;
     userId: number;
-    type: 'income' | 'expense' | 'transfer';
+    type: 'expense' | 'income' | 'transfer';
     amount: number;
     currency: string;
     exchangeRateToBase: number;
     amountInBase: number;
-    categoryId?: number | null;
-    accountId?: number | null;
+    categoryId?: null | number;
+    accountId?: null | number;
     transactionDate: string;
     description: string;
     project?: string;
@@ -68,7 +75,7 @@ export namespace FinanceApi {
 
   // 创建交易的参数
   export interface CreateTransactionParams {
-    type: 'income' | 'expense' | 'transfer';
+    type: 'expense' | 'income' | 'transfer';
     amount: number;
     currency: string;
     categoryId?: number;
@@ -92,7 +99,7 @@ export namespace FinanceApi {
     remaining: number;
     percentage: number;
     currency: string;
-    period: 'monthly' | 'weekly' | 'quarterly' | 'yearly';
+    period: 'monthly' | 'quarterly' | 'weekly' | 'yearly';
     alertThreshold: number;
     description?: string;
     autoRenew: boolean;
@@ -114,7 +121,7 @@ export namespace FinanceApi {
     remaining?: number;
     percentage?: number;
     currency: string;
-    period: 'monthly' | 'weekly' | 'quarterly' | 'yearly';
+    period: 'monthly' | 'quarterly' | 'weekly' | 'yearly';
     alertThreshold: number;
     description?: string;
     autoRenew: boolean;
@@ -133,7 +140,9 @@ export namespace FinanceApi {
   /**
    * 获取分类
    */
-  export async function getCategories(params?: { type?: 'income' | 'expense' | 'transfer' }) {
+  export async function getCategories(params?: {
+    type?: 'expense' | 'income' | 'transfer';
+  }) {
     return requestClient.get<Category[]>('/finance/categories', { params });
   }
 
@@ -141,10 +150,10 @@ export namespace FinanceApi {
    * 创建分类
    */
   export async function createCategory(data: {
-    name: string;
-    type: 'income' | 'expense';
-    icon?: string;
     color?: string;
+    icon?: string;
+    name: string;
+    type: 'expense' | 'income';
   }) {
     return requestClient.post<Category | null>('/finance/categories', data);
   }
@@ -155,13 +164,16 @@ export namespace FinanceApi {
   export async function updateCategory(
     id: number,
     data: {
-      name?: string;
-      icon?: string;
       color?: string;
+      icon?: string;
+      name?: string;
       sortOrder?: number;
     },
   ) {
-    return requestClient.put<Category | null>(`/finance/categories/${id}`, data);
+    return requestClient.put<Category | null>(
+      `/finance/categories/${id}`,
+      data,
+    );
   }
 
   /**
@@ -184,9 +196,9 @@ export namespace FinanceApi {
    * 获取汇率
    */
   export async function getExchangeRates(params?: {
+    date?: string;
     from?: string;
     to?: string;
-    date?: string;
   }) {
     return requestClient.get<ExchangeRate[]>('/finance/exchange-rates', {
       params,
@@ -197,7 +209,7 @@ export namespace FinanceApi {
    * 获取交易列表
    */
   export async function getTransactions(params?: {
-    type?: 'income' | 'expense' | 'transfer';
+    type?: 'expense' | 'income' | 'transfer';
   }) {
     return requestClient.get<Transaction[]>('/finance/transactions', {
       params,

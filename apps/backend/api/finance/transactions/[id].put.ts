@@ -1,6 +1,8 @@
 import { getRouterParam, readBody } from 'h3';
-
-import { restoreTransaction, updateTransaction } from '~/utils/finance-repository';
+import {
+  restoreTransaction,
+  updateTransaction,
+} from '~/utils/finance-repository';
 import { useResponseError, useResponseSuccess } from '~/utils/response';
 
 export default defineEventHandler(async (event) => {
@@ -30,10 +32,12 @@ export default defineEventHandler(async (event) => {
     payload.amount = amount;
   }
   if (body?.currency) payload.currency = body.currency;
-  if (body?.categoryId !== undefined) payload.categoryId = body.categoryId ?? null;
+  if (body?.categoryId !== undefined)
+    payload.categoryId = body.categoryId ?? null;
   if (body?.accountId !== undefined) payload.accountId = body.accountId ?? null;
   if (body?.transactionDate) payload.transactionDate = body.transactionDate;
-  if (body?.description !== undefined) payload.description = body.description ?? '';
+  if (body?.description !== undefined)
+    payload.description = body.description ?? '';
   if (body?.project !== undefined) payload.project = body.project ?? null;
   if (body?.memo !== undefined) payload.memo = body.memo ?? null;
   if (body?.isDeleted !== undefined) payload.isDeleted = body.isDeleted;

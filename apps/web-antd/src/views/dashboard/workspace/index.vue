@@ -21,7 +21,20 @@ import { preferences } from '@vben/preferences';
 import { useUserStore } from '@vben/stores';
 import { openWindow } from '@vben/utils';
 
-import { Modal, Form, Input, Select, DatePicker, InputNumber, message, Radio, Space, Button, Row, Col, Switch } from 'ant-design-vue';
+import {
+  Button,
+  Col,
+  DatePicker,
+  Form,
+  Input,
+  InputNumber,
+  message,
+  Modal,
+  Radio,
+  Row,
+  Select,
+  Switch,
+} from 'ant-design-vue';
 import dayjs from 'dayjs';
 
 import { useFinanceStore } from '#/store/finance';
@@ -38,7 +51,7 @@ onMounted(async () => {
 
 // 快速记账弹窗
 const quickAddVisible = ref(false);
-const transactionType = ref<'income' | 'expense'>('expense');
+const transactionType = ref<'expense' | 'income'>('expense');
 const formRef = ref();
 const formState = ref({
   currency: 'CNY', // 默认人民币
@@ -57,7 +70,9 @@ const formState = ref({
 const useQuantityMode = ref(false);
 
 // 当前选中的日期类型
-const selectedDateType = ref<'today' | 'yesterday' | 'week' | 'month' | 'custom'>('today');
+const selectedDateType = ref<
+  'custom' | 'month' | 'today' | 'week' | 'yesterday'
+>('today');
 
 // 字段触摸状态（用于判断是否显示验证提示）
 const touchedFields = ref({
@@ -67,11 +82,14 @@ const touchedFields = ref({
 });
 
 // 监听单价和数量变化，自动计算总金额
-watch([() => formState.value.unitPrice, () => formState.value.quantity], ([unitPrice, quantity]) => {
-  if (useQuantityMode.value && unitPrice && quantity) {
-    formState.value.amount = unitPrice * quantity;
-  }
-});
+watch(
+  [() => formState.value.unitPrice, () => formState.value.quantity],
+  ([unitPrice, quantity]) => {
+    if (useQuantityMode.value && unitPrice && quantity) {
+      formState.value.amount = unitPrice * quantity;
+    }
+  },
+);
 
 // 切换计算模式
 const toggleQuantityMode = (enabled: boolean) => {
@@ -79,7 +97,8 @@ const toggleQuantityMode = (enabled: boolean) => {
   if (enabled) {
     // 如果当前有金额，反推单价
     if (formState.value.amount && formState.value.quantity) {
-      formState.value.unitPrice = formState.value.amount / formState.value.quantity;
+      formState.value.unitPrice =
+        formState.value.amount / formState.value.quantity;
     }
   } else {
     // 关闭模式时清空单价和数量
@@ -107,30 +126,38 @@ const currentCurrencySymbol = computed(() => {
 });
 
 // 监听货币变化,重置账户选择
-watch(() => formState.value.currency, () => {
-  formState.value.account = undefined;
-  touchedFields.value.account = true; // 标记账户字段为已触摸
-});
+watch(
+  () => formState.value.currency,
+  () => {
+    formState.value.account = undefined;
+    touchedFields.value.account = true; // 标记账户字段为已触摸
+  },
+);
 
 // 监听账户变化，保存到localStorage
-watch(() => formState.value.account, (newAccountId) => {
-  if (newAccountId && transactionType.value) {
-    const storageKey = transactionType.value === 'income'
-      ? 'lastWorkspaceIncomeAccountId'
-      : 'lastWorkspaceExpenseAccountId';
-    localStorage.setItem(storageKey, String(newAccountId));
-  }
-});
+watch(
+  () => formState.value.account,
+  (newAccountId) => {
+    if (newAccountId && transactionType.value) {
+      const storageKey =
+        transactionType.value === 'income'
+          ? 'lastWorkspaceIncomeAccountId'
+          : 'lastWorkspaceExpenseAccountId';
+      localStorage.setItem(storageKey, String(newAccountId));
+    }
+  },
+);
 
 // 打开快速记账弹窗
-const openQuickAdd = (type: 'income' | 'expense') => {
+const openQuickAdd = (type: 'expense' | 'income') => {
   transactionType.value = type;
   quickAddVisible.value = true;
 
   // 读取上次选择的账户
-  const storageKey = type === 'income'
-    ? 'lastWorkspaceIncomeAccountId'
-    : 'lastWorkspaceExpenseAccountId';
+  const storageKey =
+    type === 'income'
+      ? 'lastWorkspaceIncomeAccountId'
+      : 'lastWorkspaceExpenseAccountId';
   const lastAccountId = localStorage.getItem(storageKey);
   const accountId = lastAccountId ? Number(lastAccountId) : undefined;
 
@@ -160,54 +187,61 @@ const openQuickAdd = (type: 'income' | 'expense') => {
 };
 
 // 日期快捷方式
-const setDate = (type: 'today' | 'yesterday' | 'week' | 'month') => {
+const setDate = (type: 'month' | 'today' | 'week' | 'yesterday') => {
   selectedDateType.value = type;
   switch (type) {
-    case 'today':
-      formState.value.date = dayjs();
-      break;
-    case 'yesterday':
-      formState.value.date = dayjs().subtract(1, 'day');
-      break;
-    case 'week':
-      formState.value.date = dayjs().startOf('week');
-      break;
-    case 'month':
+    case 'month': {
       formState.value.date = dayjs().startOf('month');
       break;
+    }
+    case 'today': {
+      formState.value.date = dayjs();
+      break;
+    }
+    case 'week': {
+      formState.value.date = dayjs().startOf('week');
+      break;
+    }
+    case 'yesterday': {
+      formState.value.date = dayjs().subtract(1, 'day');
+      break;
+    }
   }
 };
 
 // 监听日期手动变化，设置为自定义
-watch(() => formState.value.date, (newDate) => {
-  if (!newDate) return;
+watch(
+  () => formState.value.date,
+  (newDate) => {
+    if (!newDate) return;
 
-  const today = dayjs();
-  const yesterday = dayjs().subtract(1, 'day');
-  const weekStart = dayjs().startOf('week');
-  const monthStart = dayjs().startOf('month');
+    const today = dayjs();
+    const yesterday = dayjs().subtract(1, 'day');
+    const weekStart = dayjs().startOf('week');
+    const monthStart = dayjs().startOf('month');
 
-  if (newDate.isSame(today, 'day')) {
-    selectedDateType.value = 'today';
-  } else if (newDate.isSame(yesterday, 'day')) {
-    selectedDateType.value = 'yesterday';
-  } else if (newDate.isSame(weekStart, 'day')) {
-    selectedDateType.value = 'week';
-  } else if (newDate.isSame(monthStart, 'day')) {
-    selectedDateType.value = 'month';
-  } else {
-    selectedDateType.value = 'custom';
-  }
-});
+    if (newDate.isSame(today, 'day')) {
+      selectedDateType.value = 'today';
+    } else if (newDate.isSame(yesterday, 'day')) {
+      selectedDateType.value = 'yesterday';
+    } else if (newDate.isSame(weekStart, 'day')) {
+      selectedDateType.value = 'week';
+    } else if (newDate.isSame(monthStart, 'day')) {
+      selectedDateType.value = 'month';
+    } else {
+      selectedDateType.value = 'custom';
+    }
+  },
+);
 
 // 获取日期类型对应的颜色
 const getDateTypeColor = (type: string) => {
   const colors = {
-    today: '#52c41a',     // 绿色 - 今天
+    today: '#52c41a', // 绿色 - 今天
     yesterday: '#1890ff', // 蓝色 - 昨天
-    week: '#722ed1',      // 紫色 - 本周
-    month: '#fa8c16',     // 橙色 - 本月
-    custom: '#8c8c8c',    // 灰色 - 自定义
+    week: '#722ed1', // 紫色 - 本周
+    month: '#fa8c16', // 橙色 - 本月
+    custom: '#8c8c8c', // 灰色 - 自定义
   };
   return colors[type] || colors.custom;
 };
@@ -216,7 +250,9 @@ const getDateTypeColor = (type: string) => {
 const fieldErrors = computed(() => ({
   category: touchedFields.value.category && !formState.value.category,
   account: touchedFields.value.account && !formState.value.account,
-  amount: touchedFields.value.amount && (!formState.value.amount || formState.value.amount <= 0),
+  amount:
+    touchedFields.value.amount &&
+    (!formState.value.amount || formState.value.amount <= 0),
 }));
 
 // 提交记账
@@ -246,7 +282,9 @@ const handleQuickAdd = async () => {
     });
 
     console.log('交易创建成功:', transaction);
-    message.success(`${transactionType.value === 'income' ? '收入' : '支出'}记录成功！`);
+    message.success(
+      `${transactionType.value === 'income' ? '收入' : '支出'}记录成功！`,
+    );
     quickAddVisible.value = false;
 
     // 重置表单
@@ -385,31 +423,31 @@ const todoItems = ref<WorkbenchTodoItem[]>([
   {
     completed: false,
     content: `记录本月的水电费、房租等固定支出`,
-    date: new Date().toLocaleDateString() + ' 18:00:00',
+    date: `${new Date().toLocaleDateString()} 18:00:00`,
     title: '录入本月固定支出',
   },
   {
     completed: false,
     content: `查看并调整各类别的预算设置，确保支出在可控范围内`,
-    date: new Date().toLocaleDateString() + ' 20:00:00',
+    date: `${new Date().toLocaleDateString()} 20:00:00`,
     title: '检查月度预算执行情况',
   },
   {
     completed: true,
     content: `完成本周的收入记录，包括工资和其他收入来源`,
-    date: new Date().toLocaleDateString() + ' 10:00:00',
+    date: `${new Date().toLocaleDateString()} 10:00:00`,
     title: '记录本周收入',
   },
   {
     completed: false,
     content: `核对银行账户余额，确保系统数据与实际一致`,
-    date: new Date().toLocaleDateString() + ' 15:00:00',
+    date: `${new Date().toLocaleDateString()} 15:00:00`,
     title: '对账核对',
   },
   {
     completed: false,
     content: `分析上月的支出报表，找出可以节省开支的地方`,
-    date: new Date().toLocaleDateString() + ' 16:00:00',
+    date: `${new Date().toLocaleDateString()} 16:00:00`,
     title: '生成月度财务报表',
   },
 ]);
@@ -521,18 +559,28 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
 
     <div class="mt-5 flex flex-col lg:flex-row">
       <div class="mr-4 w-full lg:w-3/5">
-        <WorkbenchProject :items="projectItems" title="财务功能快捷入口" @click="navTo" />
-        <WorkbenchTrends :items="trendItems" class="mt-5" title="最近财务活动" />
+        <WorkbenchProject
+          :items="projectItems"
+          title="财务功能快捷入口"
+          @click="navTo"
+        />
+        <WorkbenchTrends
+          :items="trendItems"
+          class="mt-5"
+          title="最近财务活动"
+        />
       </div>
       <div class="w-full lg:w-2/5">
         <WorkbenchQuickNav
           :items="quickNavItems"
           class="mt-5 lg:mt-0"
           title="快捷操作"
-          @click="(item) => {
-            console.log('WorkbenchQuickNav click事件触发:', item);
-            navTo(item);
-          }"
+          @click="
+            (item) => {
+              console.log('WorkbenchQuickNav click事件触发:', item);
+              navTo(item);
+            }
+          "
         />
         <WorkbenchTodo :items="todoItems" class="mt-5" title="财务待办事项" />
         <AnalysisChartCard class="mt-5" title="本月收支概览">
@@ -547,15 +595,18 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
       :title="transactionType === 'income' ? '💰 添加收入' : '💸 添加支出'"
       :width="900"
       @ok="handleQuickAdd"
-      @cancel="() => { quickAddVisible = false; }"
-      @update:open="(val) => { quickAddVisible = val; }"
+      @cancel="
+        () => {
+          quickAddVisible = false;
+        }
+      "
+      @update:open="
+        (val) => {
+          quickAddVisible = val;
+        }
+      "
     >
-      <Form
-        ref="formRef"
-        :model="formState"
-        layout="vertical"
-        class="mt-4"
-      >
+      <Form ref="formRef" :model="formState" layout="vertical" class="mt-4">
         <Row :gutter="16">
           <!-- 分类 -->
           <Col :span="14">
@@ -567,7 +618,15 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
               :help="fieldErrors.category ? '⚠️ 请选择一个分类' : ''"
             >
               <div
-                :style="fieldErrors.category ? { border: '2px solid #ff4d4f', borderRadius: '6px', padding: '8px' } : {}"
+                :style="
+                  fieldErrors.category
+                    ? {
+                        border: '2px solid #ff4d4f',
+                        borderRadius: '6px',
+                        padding: '8px',
+                      }
+                    : {}
+                "
               >
                 <Radio.Group
                   v-model:value="formState.category"
@@ -590,10 +649,7 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
 
           <!-- 项目名称 -->
           <Col :span="10">
-            <Form.Item
-              label="项目名称"
-              name="description"
-            >
+            <Form.Item label="项目名称" name="description">
               <Input.TextArea
                 v-model:value="formState.description"
                 placeholder="请输入项目名称..."
@@ -605,11 +661,13 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
         </Row>
 
         <!-- 货币类型、账户和金额（放在一起） -->
-        <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
+        <div class="mb-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
           <Row :gutter="16">
             <Col :span="12">
               <div class="mb-4">
-                <label class="block text-sm font-medium mb-2">货币类型 <span class="text-red-500">*</span></label>
+                <label class="mb-2 block text-sm font-medium"
+                  >货币类型 <span class="text-red-500">*</span></label
+                >
                 <Radio.Group
                   v-model:value="formState.currency"
                   size="large"
@@ -629,7 +687,10 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
             <Col :span="12">
               <div class="mb-4 flex items-center justify-between">
                 <label class="text-sm font-medium">按数量×单价计算</label>
-                <Switch v-model:checked="useQuantityMode" @change="toggleQuantityMode" />
+                <Switch
+                  v-model:checked="useQuantityMode"
+                  @change="toggleQuantityMode"
+                />
               </div>
             </Col>
           </Row>
@@ -637,7 +698,7 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
           <!-- 数量×单价模式 -->
           <Row v-if="useQuantityMode" :gutter="16" class="mb-4">
             <Col :span="8">
-              <label class="block text-sm font-medium mb-2">数量</label>
+              <label class="mb-2 block text-sm font-medium">数量</label>
               <InputNumber
                 v-model:value="formState.quantity"
                 :min="0.01"
@@ -648,7 +709,7 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
               />
             </Col>
             <Col :span="8">
-              <label class="block text-sm font-medium mb-2">单价</label>
+              <label class="mb-2 block text-sm font-medium">单价</label>
               <InputNumber
                 v-model:value="formState.unitPrice"
                 :min="0"
@@ -661,12 +722,24 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
               </InputNumber>
             </Col>
             <Col :span="8">
-              <label class="block text-sm font-medium mb-2">
+              <label class="mb-2 block text-sm font-medium">
                 总金额 <span class="text-red-500">*</span>
-                <span v-if="fieldErrors.amount" class="text-red-500 text-xs ml-1">⚠️</span>
+                <span
+                  v-if="fieldErrors.amount"
+                  class="ml-1 text-xs text-red-500"
+                  >⚠️</span
+                >
               </label>
               <div
-                :style="fieldErrors.amount ? { border: '2px solid #ff4d4f', borderRadius: '6px', padding: '2px' } : {}"
+                :style="
+                  fieldErrors.amount
+                    ? {
+                        border: '2px solid #ff4d4f',
+                        borderRadius: '6px',
+                        padding: '2px',
+                      }
+                    : {}
+                "
               >
                 <InputNumber
                   v-model:value="formState.amount"
@@ -687,12 +760,24 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
           <!-- 直接输入金额模式 -->
           <Row v-else :gutter="16" class="mb-4">
             <Col :span="24">
-              <label class="block text-sm font-medium mb-2">
+              <label class="mb-2 block text-sm font-medium">
                 金额 <span class="text-red-500">*</span>
-                <span v-if="fieldErrors.amount" class="text-red-500 text-xs ml-2">⚠️ 请输入金额</span>
+                <span
+                  v-if="fieldErrors.amount"
+                  class="ml-2 text-xs text-red-500"
+                  >⚠️ 请输入金额</span
+                >
               </label>
               <div
-                :style="fieldErrors.amount ? { border: '2px solid #ff4d4f', borderRadius: '6px', padding: '2px' } : {}"
+                :style="
+                  fieldErrors.amount
+                    ? {
+                        border: '2px solid #ff4d4f',
+                        borderRadius: '6px',
+                        padding: '2px',
+                      }
+                    : {}
+                "
               >
                 <InputNumber
                   v-model:value="formState.amount"
@@ -712,7 +797,7 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
           <!-- 重量（可选） -->
           <Row :gutter="16" class="mb-4">
             <Col :span="16">
-              <label class="block text-sm font-medium mb-2">重量（可选）</label>
+              <label class="mb-2 block text-sm font-medium">重量（可选）</label>
               <InputNumber
                 v-model:value="formState.weight"
                 :min="0"
@@ -722,7 +807,7 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
               />
             </Col>
             <Col :span="8">
-              <label class="block text-sm font-medium mb-2">单位</label>
+              <label class="mb-2 block text-sm font-medium">单位</label>
               <Select v-model:value="formState.weightUnit" style="width: 100%">
                 <Select.Option value="kg">千克(kg)</Select.Option>
                 <Select.Option value="g">克(g)</Select.Option>
@@ -733,12 +818,23 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
           </Row>
 
           <div>
-            <label class="block text-sm font-medium mb-2">
-              {{ transactionType === 'income' ? '收入账户' : '支出账户' }} <span class="text-red-500">*</span>
-              <span v-if="fieldErrors.account" class="text-red-500 text-xs ml-2">⚠️ 请选择账户</span>
+            <label class="mb-2 block text-sm font-medium">
+              {{ transactionType === 'income' ? '收入账户' : '支出账户' }}
+              <span class="text-red-500">*</span>
+              <span v-if="fieldErrors.account" class="ml-2 text-xs text-red-500"
+                >⚠️ 请选择账户</span
+              >
             </label>
             <div
-              :style="fieldErrors.account ? { border: '2px solid #ff4d4f', borderRadius: '6px', padding: '8px' } : {}"
+              :style="
+                fieldErrors.account
+                  ? {
+                      border: '2px solid #ff4d4f',
+                      borderRadius: '6px',
+                      padding: '8px',
+                    }
+                  : {}
+              "
             >
               <Radio.Group
                 v-model:value="formState.account"
@@ -766,15 +862,35 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
               <div class="flex flex-col space-y-2">
                 <Button
                   :type="selectedDateType === 'today' ? 'primary' : 'default'"
-                  :style="{ backgroundColor: selectedDateType === 'today' ? getDateTypeColor('today') : undefined, borderColor: selectedDateType === 'today' ? getDateTypeColor('today') : undefined }"
+                  :style="{
+                    backgroundColor:
+                      selectedDateType === 'today'
+                        ? getDateTypeColor('today')
+                        : undefined,
+                    borderColor:
+                      selectedDateType === 'today'
+                        ? getDateTypeColor('today')
+                        : undefined,
+                  }"
                   @click="setDate('today')"
                   block
                 >
                   今天
                 </Button>
                 <Button
-                  :type="selectedDateType === 'yesterday' ? 'primary' : 'default'"
-                  :style="{ backgroundColor: selectedDateType === 'yesterday' ? getDateTypeColor('yesterday') : undefined, borderColor: selectedDateType === 'yesterday' ? getDateTypeColor('yesterday') : undefined }"
+                  :type="
+                    selectedDateType === 'yesterday' ? 'primary' : 'default'
+                  "
+                  :style="{
+                    backgroundColor:
+                      selectedDateType === 'yesterday'
+                        ? getDateTypeColor('yesterday')
+                        : undefined,
+                    borderColor:
+                      selectedDateType === 'yesterday'
+                        ? getDateTypeColor('yesterday')
+                        : undefined,
+                  }"
                   @click="setDate('yesterday')"
                   block
                 >
@@ -782,7 +898,16 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
                 </Button>
                 <Button
                   :type="selectedDateType === 'week' ? 'primary' : 'default'"
-                  :style="{ backgroundColor: selectedDateType === 'week' ? getDateTypeColor('week') : undefined, borderColor: selectedDateType === 'week' ? getDateTypeColor('week') : undefined }"
+                  :style="{
+                    backgroundColor:
+                      selectedDateType === 'week'
+                        ? getDateTypeColor('week')
+                        : undefined,
+                    borderColor:
+                      selectedDateType === 'week'
+                        ? getDateTypeColor('week')
+                        : undefined,
+                  }"
                   @click="setDate('week')"
                   block
                 >
@@ -790,7 +915,16 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
                 </Button>
                 <Button
                   :type="selectedDateType === 'month' ? 'primary' : 'default'"
-                  :style="{ backgroundColor: selectedDateType === 'month' ? getDateTypeColor('month') : undefined, borderColor: selectedDateType === 'month' ? getDateTypeColor('month') : undefined }"
+                  :style="{
+                    backgroundColor:
+                      selectedDateType === 'month'
+                        ? getDateTypeColor('month')
+                        : undefined,
+                    borderColor:
+                      selectedDateType === 'month'
+                        ? getDateTypeColor('month')
+                        : undefined,
+                  }"
                   @click="setDate('month')"
                   block
                 >
@@ -800,16 +934,13 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
             </Form.Item>
           </Col>
           <Col :span="14">
-            <Form.Item
-              label="选择日期"
-              name="date"
-            >
+            <Form.Item label="选择日期" name="date">
               <div
                 class="date-picker-wrapper"
                 :style="{
                   border: `2px solid ${getDateTypeColor(selectedDateType)}`,
                   borderRadius: '6px',
-                  padding: '4px'
+                  padding: '4px',
                 }"
               >
                 <DatePicker
@@ -846,10 +977,15 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
   border-radius: 6px !important;
 }
 
-:deep(.category-radio-group .ant-radio-button-wrapper:not(:first-child)::before),
-:deep(.currency-radio-group .ant-radio-button-wrapper:not(:first-child)::before),
-:deep(.account-radio-group .ant-radio-button-wrapper:not(:first-child)::before) {
+:deep(
+  .category-radio-group .ant-radio-button-wrapper:not(:first-child)::before
+),
+:deep(
+  .currency-radio-group .ant-radio-button-wrapper:not(:first-child)::before
+),
+:deep(
+  .account-radio-group .ant-radio-button-wrapper:not(:first-child)::before
+) {
   display: none;
 }
-
 </style>

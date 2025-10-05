@@ -1,242 +1,18 @@
-<template>
-  <div class="p-6">
-    <div class="mb-6 flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">📈 财务报表</h1>
-        <p class="text-gray-600">全面的财务数据分析与报表生成</p>
-      </div>
-      <div class="flex space-x-2">
-        <Button @click="showImportModal = true">
-          📤 导入报表
-        </Button>
-        <Button @click="showExportModal = true" type="primary">
-          📥 导出报表
-        </Button>
-        <Button @click="printReport">
-          🖨️ 打印报表
-        </Button>
-      </div>
-    </div>
-
-    <!-- 时间筛选 -->
-    <Card class="mb-6">
-      <div class="flex items-center space-x-4">
-        <span class="font-medium">报表周期：</span>
-        <Radio.Group v-model:value="period" button-style="solid">
-          <Radio.Button value="month">本月</Radio.Button>
-          <Radio.Button value="quarter">本季度</Radio.Button>
-          <Radio.Button value="year">本年</Radio.Button>
-          <Radio.Button value="all">全部</Radio.Button>
-        </Radio.Group>
-        <RangePicker v-if="period === 'custom'" v-model:value="customRange" />
-      </div>
-    </Card>
-
-    <!-- 核心指标汇总 -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-      <Card class="text-center hover:shadow-lg transition-shadow">
-        <div class="text-3xl mb-2">💰</div>
-        <p class="text-sm text-gray-500">总收入</p>
-        <p class="text-2xl font-bold text-green-600">
-          ¥{{ periodIncome.toLocaleString('zh-CN', { minimumFractionDigits: 2 }) }}
-        </p>
-      </Card>
-      <Card class="text-center hover:shadow-lg transition-shadow">
-        <div class="text-3xl mb-2">💸</div>
-        <p class="text-sm text-gray-500">总支出</p>
-        <p class="text-2xl font-bold text-red-600">
-          ¥{{ periodExpense.toLocaleString('zh-CN', { minimumFractionDigits: 2 }) }}
-        </p>
-      </Card>
-      <Card class="text-center hover:shadow-lg transition-shadow">
-        <div class="text-3xl mb-2">💎</div>
-        <p class="text-sm text-gray-500">净收入</p>
-        <p class="text-2xl font-bold" :class="periodNet >= 0 ? 'text-purple-600' : 'text-red-600'">
-          {{ periodNet >= 0 ? '+' : '' }}¥{{ periodNet.toLocaleString('zh-CN', { minimumFractionDigits: 2 }) }}
-        </p>
-      </Card>
-      <Card class="text-center hover:shadow-lg transition-shadow">
-        <div class="text-3xl mb-2">📊</div>
-        <p class="text-sm text-gray-500">交易笔数</p>
-        <p class="text-2xl font-bold text-blue-600">{{ periodTransactions.length }}</p>
-      </Card>
-    </div>
-
-    <!-- 详细报表 -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-      <!-- 收入分析 -->
-      <Card title="📈 收入分析">
-        <div class="space-y-3">
-          <div v-if="incomeByCategory.length === 0" class="text-center py-8">
-            <p class="text-gray-500">暂无收入数据</p>
-          </div>
-          <div v-else v-for="item in incomeByCategory" :key="item.categoryId" class="p-3 bg-gray-50 rounded-lg">
-            <div class="flex justify-between items-center mb-2">
-              <span class="font-medium">{{ item.categoryName }}</span>
-              <span class="text-sm font-bold text-green-600">
-                ¥{{ item.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 }) }}
-              </span>
-            </div>
-            <div class="flex items-center space-x-2">
-              <div class="flex-1 bg-gray-200 rounded-full h-2">
-                <div
-                  class="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full transition-all duration-500"
-                  :style="{ width: item.percentage + '%' }"
-                ></div>
-              </div>
-              <span class="text-xs text-gray-500 w-12 text-right">{{ item.percentage }}%</span>
-            </div>
-            <p class="text-xs text-gray-500 mt-1">{{ item.count }} 笔 · 平均 ¥{{ (item.amount / item.count).toFixed(2) }}</p>
-          </div>
-        </div>
-      </Card>
-
-      <!-- 支出分析 -->
-      <Card title="📉 支出分析">
-        <div class="space-y-3">
-          <div v-if="expenseByCategory.length === 0" class="text-center py-8">
-            <p class="text-gray-500">暂无支出数据</p>
-          </div>
-          <div v-else v-for="item in expenseByCategory" :key="item.categoryId" class="p-3 bg-gray-50 rounded-lg">
-            <div class="flex justify-between items-center mb-2">
-              <span class="font-medium">{{ item.categoryName }}</span>
-              <span class="text-sm font-bold text-red-600">
-                ¥{{ item.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 }) }}
-              </span>
-            </div>
-            <div class="flex items-center space-x-2">
-              <div class="flex-1 bg-gray-200 rounded-full h-2">
-                <div
-                  class="bg-gradient-to-r from-red-400 to-red-600 h-2 rounded-full transition-all duration-500"
-                  :style="{ width: item.percentage + '%' }"
-                ></div>
-              </div>
-              <span class="text-xs text-gray-500 w-12 text-right">{{ item.percentage }}%</span>
-            </div>
-            <p class="text-xs text-gray-500 mt-1">{{ item.count }} 笔 · 平均 ¥{{ (item.amount / item.count).toFixed(2) }}</p>
-          </div>
-        </div>
-      </Card>
-    </div>
-
-    <!-- 交易明细表 -->
-    <Card title="📋 交易明细">
-      <Table
-        :columns="columns"
-        :dataSource="periodTransactions"
-        :pagination="{ pageSize: 20 }"
-        :rowKey="record => record.id"
-      >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.dataIndex === 'type'">
-            <Tag :color="record.type === 'income' ? 'green' : 'red'">
-              {{ record.type === 'income' ? '📈 收入' : '📉 支出' }}
-            </Tag>
-          </template>
-          <template v-else-if="column.dataIndex === 'amount'">
-            <span :class="record.type === 'income' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'">
-              {{ record.type === 'income' ? '+' : '-' }}¥{{ Math.abs(record.amount).toLocaleString() }}
-            </span>
-          </template>
-          <template v-else-if="column.dataIndex === 'categoryId'">
-            <Tag>{{ getCategoryName(record.categoryId) }}</Tag>
-          </template>
-          <template v-else-if="column.dataIndex === 'accountId'">
-            {{ getAccountName(record.accountId) }}
-          </template>
-        </template>
-      </Table>
-    </Card>
-
-    <!-- 导出报表模态框 -->
-    <Modal v-model:open="showExportModal" title="📥 导出财务报表" @ok="handleExportReport" width="600px">
-      <Form layout="vertical">
-        <Form.Item label="导出格式" required>
-          <Radio.Group v-model:value="exportOptions.format" size="large">
-            <Radio.Button value="pdf">📄 PDF 格式</Radio.Button>
-            <Radio.Button value="excel">📊 Excel 格式</Radio.Button>
-            <Radio.Button value="csv">📋 CSV 格式</Radio.Button>
-          </Radio.Group>
-        </Form.Item>
-
-        <Form.Item label="包含内容">
-          <div class="space-y-2">
-            <label class="flex items-center">
-              <input type="checkbox" v-model="exportOptions.includeSummary" class="mr-2" /> 核心指标汇总
-            </label>
-            <label class="flex items-center">
-              <input type="checkbox" v-model="exportOptions.includeIncome" class="mr-2" /> 收入分析
-            </label>
-            <label class="flex items-center">
-              <input type="checkbox" v-model="exportOptions.includeExpense" class="mr-2" /> 支出分析
-            </label>
-            <label class="flex items-center">
-              <input type="checkbox" v-model="exportOptions.includeTransactions" class="mr-2" /> 交易明细
-            </label>
-          </div>
-        </Form.Item>
-
-        <Form.Item label="报表标题">
-          <Input v-model:value="exportOptions.title" placeholder="财务报表" />
-        </Form.Item>
-      </Form>
-    </Modal>
-
-    <!-- 导入报表模态框 -->
-    <Modal v-model:open="showImportModal" title="📤 导入财务报表数据" @ok="handleImportReport" width="700px">
-      <Form layout="vertical">
-        <Form.Item label="上传文件" required>
-          <input
-            type="file"
-            accept=".xlsx,.xls,.csv,.json"
-            @change="handleReportFileUpload"
-            class="block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-blue-50 file:text-blue-700
-              hover:file:bg-blue-100"
-          />
-          <p class="text-sm text-gray-500 mt-2">支持 Excel (.xlsx, .xls)、CSV 和 JSON 格式</p>
-        </Form.Item>
-
-        <div v-if="importPreviewData.length > 0">
-          <Form.Item label="数据预览">
-            <div class="border rounded-lg overflow-auto max-h-60">
-              <table class="w-full text-sm">
-                <thead class="bg-gray-50 sticky top-0">
-                  <tr>
-                    <th class="px-4 py-2 text-left">日期</th>
-                    <th class="px-4 py-2 text-left">类型</th>
-                    <th class="px-4 py-2 text-left">分类</th>
-                    <th class="px-4 py-2 text-left">金额</th>
-                    <th class="px-4 py-2 text-left">描述</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(row, idx) in importPreviewData.slice(0, 5)" :key="idx" class="border-t">
-                    <td class="px-4 py-2">{{ row.date || row['日期'] }}</td>
-                    <td class="px-4 py-2">{{ row.type || row['类型'] }}</td>
-                    <td class="px-4 py-2">{{ row.category || row['分类'] }}</td>
-                    <td class="px-4 py-2">{{ row.amount || row['金额'] }}</td>
-                    <td class="px-4 py-2">{{ row.description || row['描述'] || row['项目名称'] }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p class="text-sm text-gray-500 mt-2">
-              预览前 5 条数据，共 {{ importPreviewData.length }} 条待导入
-            </p>
-          </Form.Item>
-        </div>
-      </Form>
-    </Modal>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { Card, Button, Radio, DatePicker, Table, Tag, notification, Modal, Form, Input } from 'ant-design-vue';
+import { computed, onMounted, ref } from 'vue';
+
+import {
+  Button,
+  Card,
+  DatePicker,
+  Form,
+  Input,
+  Modal,
+  notification,
+  Radio,
+  Table,
+  Tag,
+} from 'ant-design-vue';
 import dayjs from 'dayjs';
 import * as XLSX from 'xlsx';
 
@@ -256,12 +32,12 @@ const showImportModal = ref(false);
 const importPreviewData = ref<any[]>([]);
 
 const exportOptions = ref({
-  format: 'excel' as 'pdf' | 'excel' | 'csv',
+  format: 'excel' as 'csv' | 'excel' | 'pdf',
   includeSummary: true,
   includeIncome: true,
   includeExpense: true,
   includeTransactions: true,
-  title: '财务报表'
+  title: '财务报表',
 });
 
 // 获取周期内的交易
@@ -270,37 +46,42 @@ const periodTransactions = computed(() => {
   let startDate: dayjs.Dayjs;
 
   switch (period.value) {
-    case 'month':
+    case 'all': {
+      return financeStore.transactions.filter((t) => !t.isDeleted);
+    }
+    case 'month': {
       startDate = now.startOf('month');
       break;
-    case 'quarter':
+    }
+    case 'quarter': {
       startDate = now.startOf('quarter');
       break;
-    case 'year':
+    }
+    case 'year': {
       startDate = now.startOf('year');
       break;
-    case 'all':
-      return financeStore.transactions.filter(t => !t.isDeleted);
-    default:
-      return financeStore.transactions.filter(t => !t.isDeleted);
+    }
+    default: {
+      return financeStore.transactions.filter((t) => !t.isDeleted);
+    }
   }
 
-  return financeStore.transactions.filter(t =>
-    !t.isDeleted && dayjs(t.transactionDate).isAfter(startDate)
+  return financeStore.transactions.filter(
+    (t) => !t.isDeleted && dayjs(t.transactionDate).isAfter(startDate),
   );
 });
 
 // 周期收入
 const periodIncome = computed(() => {
   return periodTransactions.value
-    .filter(t => t.type === 'income')
+    .filter((t) => t.type === 'income')
     .reduce((sum, t) => sum + t.amountInBase, 0);
 });
 
 // 周期支出
 const periodExpense = computed(() => {
   return periodTransactions.value
-    .filter(t => t.type === 'expense')
+    .filter((t) => t.type === 'expense')
     .reduce((sum, t) => sum + t.amountInBase, 0);
 });
 
@@ -309,18 +90,21 @@ const periodNet = computed(() => periodIncome.value - periodExpense.value);
 
 // 按分类统计收入
 const incomeByCategory = computed(() => {
-  const incomeTransactions = periodTransactions.value.filter(t => t.type === 'income');
+  const incomeTransactions = periodTransactions.value.filter(
+    (t) => t.type === 'income',
+  );
   if (incomeTransactions.length === 0) return [];
 
   const categoryMap = new Map();
-  incomeTransactions.forEach(t => {
+  incomeTransactions.forEach((t) => {
     const categoryId = t.categoryId || 0;
     if (!categoryMap.has(categoryId)) {
       categoryMap.set(categoryId, {
         categoryId,
-        categoryName: financeStore.getCategoryById(categoryId)?.name || '未分类',
+        categoryName:
+          financeStore.getCategoryById(categoryId)?.name || '未分类',
         amount: 0,
-        count: 0
+        count: 0,
       });
     }
     const category = categoryMap.get(categoryId);
@@ -328,28 +112,31 @@ const incomeByCategory = computed(() => {
     category.count += 1;
   });
 
-  return Array.from(categoryMap.values())
-    .map(item => ({
+  return [...categoryMap.values()]
+    .map((item) => ({
       ...item,
-      percentage: Math.round((item.amount / periodIncome.value) * 100)
+      percentage: Math.round((item.amount / periodIncome.value) * 100),
     }))
     .sort((a, b) => b.amount - a.amount);
 });
 
 // 按分类统计支出
 const expenseByCategory = computed(() => {
-  const expenseTransactions = periodTransactions.value.filter(t => t.type === 'expense');
+  const expenseTransactions = periodTransactions.value.filter(
+    (t) => t.type === 'expense',
+  );
   if (expenseTransactions.length === 0) return [];
 
   const categoryMap = new Map();
-  expenseTransactions.forEach(t => {
+  expenseTransactions.forEach((t) => {
     const categoryId = t.categoryId || 0;
     if (!categoryMap.has(categoryId)) {
       categoryMap.set(categoryId, {
         categoryId,
-        categoryName: financeStore.getCategoryById(categoryId)?.name || '未分类',
+        categoryName:
+          financeStore.getCategoryById(categoryId)?.name || '未分类',
         amount: 0,
-        count: 0
+        count: 0,
       });
     }
     const category = categoryMap.get(categoryId);
@@ -357,25 +144,30 @@ const expenseByCategory = computed(() => {
     category.count += 1;
   });
 
-  return Array.from(categoryMap.values())
-    .map(item => ({
+  return [...categoryMap.values()]
+    .map((item) => ({
       ...item,
-      percentage: Math.round((item.amount / periodExpense.value) * 100)
+      percentage: Math.round((item.amount / periodExpense.value) * 100),
     }))
     .sort((a, b) => b.amount - a.amount);
 });
 
 // 表格列
 const columns = [
-  { title: '日期', dataIndex: 'transactionDate', key: 'transactionDate', width: 120 },
+  {
+    title: '日期',
+    dataIndex: 'transactionDate',
+    key: 'transactionDate',
+    width: 120,
+  },
   { title: '类型', dataIndex: 'type', key: 'type', width: 100 },
   { title: '描述', dataIndex: 'description', key: 'description' },
   { title: '分类', dataIndex: 'categoryId', key: 'categoryId', width: 120 },
   { title: '金额', dataIndex: 'amount', key: 'amount', width: 150 },
-  { title: '账户', dataIndex: 'accountId', key: 'accountId', width: 120 }
+  { title: '账户', dataIndex: 'accountId', key: 'accountId', width: 120 },
 ];
 
-const getCategoryName = (categoryId: number | null) => {
+const getCategoryName = (categoryId: null | number) => {
   if (!categoryId) return '未分类';
   const category = financeStore.getCategoryById(categoryId);
   return category ? `${category.icon} ${category.name}` : '未知分类';
@@ -392,21 +184,32 @@ const handleExportReport = () => {
     const timestamp = new Date().toISOString().split('T')[0];
     const title = exportOptions.value.title || '财务报表';
 
-    if (exportOptions.value.format === 'excel') {
-      exportToExcel(title, timestamp);
-    } else if (exportOptions.value.format === 'csv') {
-      exportToCSV(title, timestamp);
-    } else if (exportOptions.value.format === 'pdf') {
-      notification.info({
-        message: 'PDF 格式',
-        description: 'PDF 导出功能开发中，暂时使用 Excel 代替'
-      });
-      exportToExcel(title, timestamp);
+    switch (exportOptions.value.format) {
+      case 'csv': {
+        exportToCSV(title, timestamp);
+
+        break;
+      }
+      case 'excel': {
+        exportToExcel(title, timestamp);
+
+        break;
+      }
+      case 'pdf': {
+        notification.info({
+          message: 'PDF 格式',
+          description: 'PDF 导出功能开发中，暂时使用 Excel 代替',
+        });
+        exportToExcel(title, timestamp);
+
+        break;
+      }
+      // No default
     }
 
     notification.success({
       message: '导出成功',
-      description: `报表已成功导出`
+      description: `报表已成功导出`,
     });
 
     showExportModal.value = false;
@@ -414,7 +217,7 @@ const handleExportReport = () => {
     console.error('导出失败:', error);
     notification.error({
       message: '导出失败',
-      description: '报表导出过程中出现错误'
+      description: '报表导出过程中出现错误',
     });
   }
 };
@@ -428,10 +231,25 @@ const exportToExcel = (title: string, timestamp: string) => {
     const summaryData = [
       ['核心指标汇总', '', '', ''],
       ['指标', '金额', '', ''],
-      ['总收入', `¥${periodIncome.value.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}`, '', ''],
-      ['总支出', `¥${periodExpense.value.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}`, '', ''],
-      ['净收入', `¥${periodNet.value.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}`, '', ''],
-      ['交易笔数', periodTransactions.value.length, '', '']
+      [
+        '总收入',
+        `¥${periodIncome.value.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}`,
+        '',
+        '',
+      ],
+      [
+        '总支出',
+        `¥${periodExpense.value.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}`,
+        '',
+        '',
+      ],
+      [
+        '净收入',
+        `¥${periodNet.value.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}`,
+        '',
+        '',
+      ],
+      ['交易笔数', periodTransactions.value.length, '', ''],
     ];
     const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
     XLSX.utils.book_append_sheet(workbook, summarySheet, '核心指标');
@@ -439,40 +257,46 @@ const exportToExcel = (title: string, timestamp: string) => {
 
   // 收入分析
   if (exportOptions.value.includeIncome && incomeByCategory.value.length > 0) {
-    const incomeData = incomeByCategory.value.map(item => ({
-      '分类': item.categoryName,
-      '金额': item.amount,
-      '笔数': item.count,
-      '平均': (item.amount / item.count).toFixed(2),
-      '占比': `${item.percentage}%`
+    const incomeData = incomeByCategory.value.map((item) => ({
+      分类: item.categoryName,
+      金额: item.amount,
+      笔数: item.count,
+      平均: (item.amount / item.count).toFixed(2),
+      占比: `${item.percentage}%`,
     }));
     const incomeSheet = XLSX.utils.json_to_sheet(incomeData);
     XLSX.utils.book_append_sheet(workbook, incomeSheet, '收入分析');
   }
 
   // 支出分析
-  if (exportOptions.value.includeExpense && expenseByCategory.value.length > 0) {
-    const expenseData = expenseByCategory.value.map(item => ({
-      '分类': item.categoryName,
-      '金额': item.amount,
-      '笔数': item.count,
-      '平均': (item.amount / item.count).toFixed(2),
-      '占比': `${item.percentage}%`
+  if (
+    exportOptions.value.includeExpense &&
+    expenseByCategory.value.length > 0
+  ) {
+    const expenseData = expenseByCategory.value.map((item) => ({
+      分类: item.categoryName,
+      金额: item.amount,
+      笔数: item.count,
+      平均: (item.amount / item.count).toFixed(2),
+      占比: `${item.percentage}%`,
     }));
     const expenseSheet = XLSX.utils.json_to_sheet(expenseData);
     XLSX.utils.book_append_sheet(workbook, expenseSheet, '支出分析');
   }
 
   // 交易明细
-  if (exportOptions.value.includeTransactions && periodTransactions.value.length > 0) {
-    const transactionsData = periodTransactions.value.map(t => ({
-      '日期': t.transactionDate,
-      '类型': t.type === 'income' ? '收入' : '支出',
-      '描述': t.description || '',
-      '分类': getCategoryName(t.categoryId),
-      '金额': t.amount,
-      '币种': t.currency,
-      '账户': getAccountName(t.accountId)
+  if (
+    exportOptions.value.includeTransactions &&
+    periodTransactions.value.length > 0
+  ) {
+    const transactionsData = periodTransactions.value.map((t) => ({
+      日期: t.transactionDate,
+      类型: t.type === 'income' ? '收入' : '支出',
+      描述: t.description || '',
+      分类: getCategoryName(t.categoryId),
+      金额: t.amount,
+      币种: t.currency,
+      账户: getAccountName(t.accountId),
     }));
     const transactionsSheet = XLSX.utils.json_to_sheet(transactionsData);
     XLSX.utils.book_append_sheet(workbook, transactionsSheet, '交易明细');
@@ -497,17 +321,22 @@ const exportToCSV = (title: string, timestamp: string) => {
   }
 
   // 交易明细
-  if (exportOptions.value.includeTransactions && periodTransactions.value.length > 0) {
+  if (
+    exportOptions.value.includeTransactions &&
+    periodTransactions.value.length > 0
+  ) {
     csvContent += '交易明细\n';
     csvContent += '日期,类型,描述,分类,金额,币种,账户\n';
-    periodTransactions.value.forEach(t => {
+    periodTransactions.value.forEach((t) => {
       csvContent += `${t.transactionDate},${t.type === 'income' ? '收入' : '支出'},"${t.description || ''}",${getCategoryName(t.categoryId)},${t.amount},${t.currency},${getAccountName(t.accountId)}\n`;
     });
   }
 
   // 下载文件
   const BOM = '\uFEFF';
-  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([BOM + csvContent], {
+    type: 'text/csv;charset=utf-8;',
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -523,17 +352,18 @@ const printReport = () => {
     if (!printWindow) {
       notification.error({
         message: '打印失败',
-        description: '无法打开打印窗口，请检查浏览器设置'
+        description: '无法打开打印窗口，请检查浏览器设置',
       });
       return;
     }
 
-    const periodText = {
-      month: '本月',
-      quarter: '本季度',
-      year: '本年',
-      all: '全部'
-    }[period.value] || '自定义';
+    const periodText =
+      {
+        month: '本月',
+        quarter: '本季度',
+        year: '本年',
+        all: '全部',
+      }[period.value] || '自定义';
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -587,10 +417,14 @@ const printReport = () => {
           </div>
         </div>
 
-        ${incomeByCategory.value.length > 0 ? `
+        ${
+          incomeByCategory.value.length > 0
+            ? `
         <h2>收入分析</h2>
         <div>
-          ${incomeByCategory.value.map(item => `
+          ${incomeByCategory.value
+            .map(
+              (item) => `
             <div class="category-item">
               <span class="category-name">${item.categoryName}</span>
               <span class="category-amount income">¥${item.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}</span>
@@ -598,14 +432,22 @@ const printReport = () => {
                 ${item.count} 笔 · 平均 ¥${(item.amount / item.count).toFixed(2)} · ${item.percentage}%
               </div>
             </div>
-          `).join('')}
+          `,
+            )
+            .join('')}
         </div>
-        ` : ''}
+        `
+            : ''
+        }
 
-        ${expenseByCategory.value.length > 0 ? `
+        ${
+          expenseByCategory.value.length > 0
+            ? `
         <h2>支出分析</h2>
         <div>
-          ${expenseByCategory.value.map(item => `
+          ${expenseByCategory.value
+            .map(
+              (item) => `
             <div class="category-item">
               <span class="category-name">${item.categoryName}</span>
               <span class="category-amount expense">¥${item.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}</span>
@@ -613,11 +455,17 @@ const printReport = () => {
                 ${item.count} 笔 · 平均 ¥${(item.amount / item.count).toFixed(2)} · ${item.percentage}%
               </div>
             </div>
-          `).join('')}
+          `,
+            )
+            .join('')}
         </div>
-        ` : ''}
+        `
+            : ''
+        }
 
-        ${periodTransactions.value.length > 0 ? `
+        ${
+          periodTransactions.value.length > 0
+            ? `
         <h2>交易明细</h2>
         <table>
           <thead>
@@ -631,7 +479,9 @@ const printReport = () => {
             </tr>
           </thead>
           <tbody>
-            ${periodTransactions.value.map(t => `
+            ${periodTransactions.value
+              .map(
+                (t) => `
               <tr>
                 <td>${t.transactionDate}</td>
                 <td>${t.type === 'income' ? '📈 收入' : '📉 支出'}</td>
@@ -642,10 +492,14 @@ const printReport = () => {
                 </td>
                 <td>${getAccountName(t.accountId)}</td>
               </tr>
-            `).join('')}
+            `,
+              )
+              .join('')}
           </tbody>
         </table>
-        ` : ''}
+        `
+            : ''
+        }
 
         <div class="no-print" style="text-align: center; margin-top: 40px;">
           <button onclick="window.print()" style="padding: 10px 30px; font-size: 16px; cursor: pointer;">🖨️ 打印</button>
@@ -659,7 +513,7 @@ const printReport = () => {
     console.error('打印失败:', error);
     notification.error({
       message: '打印失败',
-      description: '生成打印预览时出现错误'
+      description: '生成打印预览时出现错误',
     });
   }
 };
@@ -672,38 +526,54 @@ const handleReportFileUpload = async (event: Event) => {
   try {
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
 
-    if (fileExtension === 'json') {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      importPreviewData.value = Array.isArray(data) ? data : [data];
-    } else if (fileExtension === 'csv') {
-      const text = await file.text();
-      const lines = text.split('\n').filter(line => line.trim());
-      if (lines.length < 2) throw new Error('CSV 文件格式不正确');
+    switch (fileExtension) {
+      case 'csv': {
+        const text = await file.text();
+        const lines = text.split('\n').filter((line) => line.trim());
+        if (lines.length < 2) throw new Error('CSV 文件格式不正确');
 
-      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-      const data = lines.slice(1).map(line => {
-        const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-        const row: any = {};
-        headers.forEach((header, index) => {
-          row[header] = values[index] || '';
+        const headers = lines[0]
+          .split(',')
+          .map((h) => h.trim().replaceAll(/^"|"$/g, ''));
+        const data = lines.slice(1).map((line) => {
+          const values = line
+            .split(',')
+            .map((v) => v.trim().replaceAll(/^"|"$/g, ''));
+          const row: any = {};
+          headers.forEach((header, index) => {
+            row[header] = values[index] || '';
+          });
+          return row;
         });
-        return row;
-      });
-      importPreviewData.value = data;
-    } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
-      const arrayBuffer = await file.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      const data = XLSX.utils.sheet_to_json(worksheet);
-      importPreviewData.value = data;
+        importPreviewData.value = data;
+
+        break;
+      }
+      case 'json': {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        importPreviewData.value = Array.isArray(data) ? data : [data];
+
+        break;
+      }
+      case 'xls':
+      case 'xlsx': {
+        const arrayBuffer = await file.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const data = XLSX.utils.sheet_to_json(worksheet);
+        importPreviewData.value = data;
+
+        break;
+      }
+      // No default
     }
   } catch (error) {
     console.error('文件解析失败:', error);
     notification.error({
       message: '文件解析失败',
-      description: '请检查文件格式是否正确'
+      description: '请检查文件格式是否正确',
     });
   }
 };
@@ -714,7 +584,7 @@ const handleImportReport = async () => {
     if (importPreviewData.value.length === 0) {
       notification.warning({
         message: '无数据',
-        description: '请先上传文件'
+        description: '请先上传文件',
       });
       return;
     }
@@ -725,17 +595,24 @@ const handleImportReport = async () => {
     for (const row of importPreviewData.value) {
       try {
         const type = row.type || row['类型'];
-        const typeValue = type === '收入' || type === 'income' ? 'income' : 'expense';
+        const typeValue =
+          type === '收入' || type === 'income' ? 'income' : 'expense';
 
         // 查找分类
-        const categoryName = (row.category || row['分类'] || '').replace(/[^\u4e00-\u9fa5a-zA-Z]/g, '');
-        const categories = typeValue === 'income'
-          ? financeStore.incomeCategories
-          : financeStore.expenseCategories;
-        const category = categories.find(c => c.name === categoryName);
+        const categoryName = (row.category || row['分类'] || '').replaceAll(
+          /[^\u4E00-\u9FA5a-z]/gi,
+          '',
+        );
+        const categories =
+          typeValue === 'income'
+            ? financeStore.incomeCategories
+            : financeStore.expenseCategories;
+        const category = categories.find((c) => c.name === categoryName);
 
         // 查找账户 - 使用默认账户
-        const defaultAccount = financeStore.accounts.find(a => a.currency === (row.currency || row['币种'] || 'CNY'));
+        const defaultAccount = financeStore.accounts.find(
+          (a) => a.currency === (row.currency || row['币种'] || 'CNY'),
+        );
 
         if (!defaultAccount) {
           failCount++;
@@ -749,7 +626,7 @@ const handleImportReport = async () => {
           categoryId: category?.id,
           accountId: defaultAccount.id,
           transactionDate: row.date || row['日期'],
-          description: row.description || row['描述'] || row['项目名称'] || ''
+          description: row.description || row['描述'] || row['项目名称'] || '',
         });
 
         successCount++;
@@ -761,7 +638,7 @@ const handleImportReport = async () => {
 
     notification.success({
       message: '导入完成',
-      description: `成功导入 ${successCount} 条，失败 ${failCount} 条`
+      description: `成功导入 ${successCount} 条，失败 ${failCount} 条`,
     });
 
     showImportModal.value = false;
@@ -770,7 +647,7 @@ const handleImportReport = async () => {
     console.error('导入失败:', error);
     notification.error({
       message: '导入失败',
-      description: '数据导入过程中出现错误'
+      description: '数据导入过程中出现错误',
     });
   }
 };
@@ -783,6 +660,322 @@ onMounted(async () => {
 });
 </script>
 
+<template>
+  <div class="p-6">
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <h1 class="mb-2 text-3xl font-bold text-gray-900">📈 财务报表</h1>
+        <p class="text-gray-600">全面的财务数据分析与报表生成</p>
+      </div>
+      <div class="flex space-x-2">
+        <Button @click="showImportModal = true"> 📤 导入报表 </Button>
+        <Button @click="showExportModal = true" type="primary">
+          📥 导出报表
+        </Button>
+        <Button @click="printReport"> 🖨️ 打印报表 </Button>
+      </div>
+    </div>
+
+    <!-- 时间筛选 -->
+    <Card class="mb-6">
+      <div class="flex items-center space-x-4">
+        <span class="font-medium">报表周期：</span>
+        <Radio.Group v-model:value="period" button-style="solid">
+          <Radio.Button value="month">本月</Radio.Button>
+          <Radio.Button value="quarter">本季度</Radio.Button>
+          <Radio.Button value="year">本年</Radio.Button>
+          <Radio.Button value="all">全部</Radio.Button>
+        </Radio.Group>
+        <RangePicker v-if="period === 'custom'" v-model:value="customRange" />
+      </div>
+    </Card>
+
+    <!-- 核心指标汇总 -->
+    <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+      <Card class="text-center transition-shadow hover:shadow-lg">
+        <div class="mb-2 text-3xl">💰</div>
+        <p class="text-sm text-gray-500">总收入</p>
+        <p class="text-2xl font-bold text-green-600">
+          ¥{{
+            periodIncome.toLocaleString('zh-CN', { minimumFractionDigits: 2 })
+          }}
+        </p>
+      </Card>
+      <Card class="text-center transition-shadow hover:shadow-lg">
+        <div class="mb-2 text-3xl">💸</div>
+        <p class="text-sm text-gray-500">总支出</p>
+        <p class="text-2xl font-bold text-red-600">
+          ¥{{
+            periodExpense.toLocaleString('zh-CN', { minimumFractionDigits: 2 })
+          }}
+        </p>
+      </Card>
+      <Card class="text-center transition-shadow hover:shadow-lg">
+        <div class="mb-2 text-3xl">💎</div>
+        <p class="text-sm text-gray-500">净收入</p>
+        <p
+          class="text-2xl font-bold"
+          :class="periodNet >= 0 ? 'text-purple-600' : 'text-red-600'"
+        >
+          {{ periodNet >= 0 ? '+' : '' }}¥{{
+            periodNet.toLocaleString('zh-CN', { minimumFractionDigits: 2 })
+          }}
+        </p>
+      </Card>
+      <Card class="text-center transition-shadow hover:shadow-lg">
+        <div class="mb-2 text-3xl">📊</div>
+        <p class="text-sm text-gray-500">交易笔数</p>
+        <p class="text-2xl font-bold text-blue-600">
+          {{ periodTransactions.length }}
+        </p>
+      </Card>
+    </div>
+
+    <!-- 详细报表 -->
+    <div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <!-- 收入分析 -->
+      <Card title="📈 收入分析">
+        <div class="space-y-3">
+          <div v-if="incomeByCategory.length === 0" class="py-8 text-center">
+            <p class="text-gray-500">暂无收入数据</p>
+          </div>
+          <div
+            v-else
+            v-for="item in incomeByCategory"
+            :key="item.categoryId"
+            class="rounded-lg bg-gray-50 p-3"
+          >
+            <div class="mb-2 flex items-center justify-between">
+              <span class="font-medium">{{ item.categoryName }}</span>
+              <span class="text-sm font-bold text-green-600">
+                ¥{{
+                  item.amount.toLocaleString('zh-CN', {
+                    minimumFractionDigits: 2,
+                  })
+                }}
+              </span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="h-2 flex-1 rounded-full bg-gray-200">
+                <div
+                  class="h-2 rounded-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-500"
+                  :style="{ width: `${item.percentage}%` }"
+                ></div>
+              </div>
+              <span class="w-12 text-right text-xs text-gray-500"
+                >{{ item.percentage }}%</span
+              >
+            </div>
+            <p class="mt-1 text-xs text-gray-500">
+              {{ item.count }} 笔 · 平均 ¥{{
+                (item.amount / item.count).toFixed(2)
+              }}
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      <!-- 支出分析 -->
+      <Card title="📉 支出分析">
+        <div class="space-y-3">
+          <div v-if="expenseByCategory.length === 0" class="py-8 text-center">
+            <p class="text-gray-500">暂无支出数据</p>
+          </div>
+          <div
+            v-else
+            v-for="item in expenseByCategory"
+            :key="item.categoryId"
+            class="rounded-lg bg-gray-50 p-3"
+          >
+            <div class="mb-2 flex items-center justify-between">
+              <span class="font-medium">{{ item.categoryName }}</span>
+              <span class="text-sm font-bold text-red-600">
+                ¥{{
+                  item.amount.toLocaleString('zh-CN', {
+                    minimumFractionDigits: 2,
+                  })
+                }}
+              </span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="h-2 flex-1 rounded-full bg-gray-200">
+                <div
+                  class="h-2 rounded-full bg-gradient-to-r from-red-400 to-red-600 transition-all duration-500"
+                  :style="{ width: `${item.percentage}%` }"
+                ></div>
+              </div>
+              <span class="w-12 text-right text-xs text-gray-500"
+                >{{ item.percentage }}%</span
+              >
+            </div>
+            <p class="mt-1 text-xs text-gray-500">
+              {{ item.count }} 笔 · 平均 ¥{{
+                (item.amount / item.count).toFixed(2)
+              }}
+            </p>
+          </div>
+        </div>
+      </Card>
+    </div>
+
+    <!-- 交易明细表 -->
+    <Card title="📋 交易明细">
+      <Table
+        :columns="columns"
+        :data-source="periodTransactions"
+        :pagination="{ pageSize: 20 }"
+        :row-key="(record) => record.id"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.dataIndex === 'type'">
+            <Tag :color="record.type === 'income' ? 'green' : 'red'">
+              {{ record.type === 'income' ? '📈 收入' : '📉 支出' }}
+            </Tag>
+          </template>
+          <template v-else-if="column.dataIndex === 'amount'">
+            <span
+              :class="
+                record.type === 'income'
+                  ? 'font-bold text-green-600'
+                  : 'font-bold text-red-600'
+              "
+            >
+              {{ record.type === 'income' ? '+' : '-' }}¥{{
+                Math.abs(record.amount).toLocaleString()
+              }}
+            </span>
+          </template>
+          <template v-else-if="column.dataIndex === 'categoryId'">
+            <Tag>{{ getCategoryName(record.categoryId) }}</Tag>
+          </template>
+          <template v-else-if="column.dataIndex === 'accountId'">
+            {{ getAccountName(record.accountId) }}
+          </template>
+        </template>
+      </Table>
+    </Card>
+
+    <!-- 导出报表模态框 -->
+    <Modal
+      v-model:open="showExportModal"
+      title="📥 导出财务报表"
+      @ok="handleExportReport"
+      width="600px"
+    >
+      <Form layout="vertical">
+        <Form.Item label="导出格式" required>
+          <Radio.Group v-model:value="exportOptions.format" size="large">
+            <Radio.Button value="pdf">📄 PDF 格式</Radio.Button>
+            <Radio.Button value="excel">📊 Excel 格式</Radio.Button>
+            <Radio.Button value="csv">📋 CSV 格式</Radio.Button>
+          </Radio.Group>
+        </Form.Item>
+
+        <Form.Item label="包含内容">
+          <div class="space-y-2">
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                v-model="exportOptions.includeSummary"
+                class="mr-2"
+              />
+              核心指标汇总
+            </label>
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                v-model="exportOptions.includeIncome"
+                class="mr-2"
+              />
+              收入分析
+            </label>
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                v-model="exportOptions.includeExpense"
+                class="mr-2"
+              />
+              支出分析
+            </label>
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                v-model="exportOptions.includeTransactions"
+                class="mr-2"
+              />
+              交易明细
+            </label>
+          </div>
+        </Form.Item>
+
+        <Form.Item label="报表标题">
+          <Input v-model:value="exportOptions.title" placeholder="财务报表" />
+        </Form.Item>
+      </Form>
+    </Modal>
+
+    <!-- 导入报表模态框 -->
+    <Modal
+      v-model:open="showImportModal"
+      title="📤 导入财务报表数据"
+      @ok="handleImportReport"
+      width="700px"
+    >
+      <Form layout="vertical">
+        <Form.Item label="上传文件" required>
+          <input
+            type="file"
+            accept=".xlsx,.xls,.csv,.json"
+            @change="handleReportFileUpload"
+            class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
+          />
+          <p class="mt-2 text-sm text-gray-500">
+            支持 Excel (.xlsx, .xls)、CSV 和 JSON 格式
+          </p>
+        </Form.Item>
+
+        <div v-if="importPreviewData.length > 0">
+          <Form.Item label="数据预览">
+            <div class="max-h-60 overflow-auto rounded-lg border">
+              <table class="w-full text-sm">
+                <thead class="sticky top-0 bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-2 text-left">日期</th>
+                    <th class="px-4 py-2 text-left">类型</th>
+                    <th class="px-4 py-2 text-left">分类</th>
+                    <th class="px-4 py-2 text-left">金额</th>
+                    <th class="px-4 py-2 text-left">描述</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(row, idx) in importPreviewData.slice(0, 5)"
+                    :key="idx"
+                    class="border-t"
+                  >
+                    <td class="px-4 py-2">{{ row.date || row['日期'] }}</td>
+                    <td class="px-4 py-2">{{ row.type || row['类型'] }}</td>
+                    <td class="px-4 py-2">{{ row.category || row['分类'] }}</td>
+                    <td class="px-4 py-2">{{ row.amount || row['金额'] }}</td>
+                    <td class="px-4 py-2">
+                      {{ row.description || row['描述'] || row['项目名称'] }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="mt-2 text-sm text-gray-500">
+              预览前 5 条数据，共 {{ importPreviewData.length }} 条待导入
+            </p>
+          </Form.Item>
+        </div>
+      </Form>
+    </Modal>
+  </div>
+</template>
+
 <style scoped>
-.grid { display: grid; }
+.grid {
+  display: grid;
+}
 </style>

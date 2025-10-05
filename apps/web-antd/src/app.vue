@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, watch } from 'vue';
+import { computed, onMounted } from 'vue';
 
 import { useAntdDesignTokens } from '@vben/hooks';
 import { preferences, usePreferences } from '@vben/preferences';
@@ -34,7 +34,7 @@ const flattenFinWiseProMenu = () => {
   const submenus = document.querySelectorAll('.vben-sub-menu');
   let finwiseMenu: Element | null = null;
 
-  submenus.forEach(menu => {
+  submenus.forEach((menu) => {
     const titleEl = menu.querySelector('.vben-sub-menu-content__title');
     if (titleEl?.textContent?.includes('FinWise Pro')) {
       finwiseMenu = menu;
@@ -49,16 +49,17 @@ const flattenFinWiseProMenu = () => {
   if (!childrenUL || !parentMenu) return;
 
   // Check if already processed
-  if ((finwiseMenu as HTMLElement).getAttribute('data-hide-finwise') === 'true') return;
+  if ((finwiseMenu as HTMLElement).dataset.hideFinwise === 'true')
+    return;
 
   // Move all children to the parent menu
-  const children = Array.from(childrenUL.children);
-  children.forEach(child => {
-    parentMenu.insertBefore(child, finwiseMenu);
+  const children = [...childrenUL.children];
+  children.forEach((child) => {
+    finwiseMenu.before(child);
   });
 
   // Mark for hiding via CSS and hide directly
-  (finwiseMenu as HTMLElement).setAttribute('data-hide-finwise', 'true');
+  (finwiseMenu as HTMLElement).dataset.hideFinwise = 'true';
   (finwiseMenu as HTMLElement).style.display = 'none';
 };
 
@@ -66,7 +67,12 @@ const flattenFinWiseProMenu = () => {
 onMounted(() => {
   // 强制修复sidebar设置，防止被用户UI操作覆盖
   const fixSidebarPreferences = () => {
-    const prefsKey = Object.keys(localStorage).find(k => k.includes('preferences') && !k.includes('locale') && !k.includes('theme'));
+    const prefsKey = Object.keys(localStorage).find(
+      (k) =>
+        k.includes('preferences') &&
+        !k.includes('locale') &&
+        !k.includes('theme'),
+    );
     if (prefsKey) {
       try {
         const prefs = JSON.parse(localStorage.getItem(prefsKey) || '{}');
@@ -78,8 +84,8 @@ onMounted(() => {
           prefs.value.sidebar.collapsedWidth = 230;
           localStorage.setItem(prefsKey, JSON.stringify(prefs));
         }
-      } catch(e) {
-        console.error('Failed to fix sidebar preferences:', e);
+      } catch (error) {
+        console.error('Failed to fix sidebar preferences:', error);
       }
     }
   };
@@ -89,7 +95,7 @@ onMounted(() => {
 
   // Run multiple times with increasing delays to catch menu rendering
   const delays = [100, 300, 500, 1000, 1500, 2000, 2500, 3000, 4000, 5000];
-  delays.forEach(delay => {
+  delays.forEach((delay) => {
     setTimeout(flattenFinWiseProMenu, delay);
   });
 
@@ -104,7 +110,7 @@ onMounted(() => {
     if (body) {
       observer.observe(body, {
         childList: true,
-        subtree: true
+        subtree: true,
       });
     }
   }, 100);
@@ -112,7 +118,9 @@ onMounted(() => {
   // 防止侧边栏自动收起
   setTimeout(() => {
     const preventSidebarCollapse = () => {
-      const sidebar = document.querySelector('[class*="sidebar"]') || document.querySelector('aside');
+      const sidebar =
+        document.querySelector('[class*="sidebar"]') ||
+        document.querySelector('aside');
 
       if (!sidebar) return;
 
@@ -120,7 +128,7 @@ onMounted(() => {
       const sidebarObserver = new MutationObserver(() => {
         const currentWidth = window.getComputedStyle(sidebar).width;
         // 如果宽度小于200px，说明可能被收起了，强制恢复
-        if (parseInt(currentWidth) < 200) {
+        if (Number.parseInt(currentWidth) < 200) {
           (sidebar as HTMLElement).style.width = '230px';
         }
       });
@@ -128,7 +136,7 @@ onMounted(() => {
       // 开始观察
       sidebarObserver.observe(sidebar, {
         attributes: true,
-        attributeFilter: ['class', 'style']
+        attributeFilter: ['class', 'style'],
       });
 
       // 强制设置初始宽度

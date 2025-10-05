@@ -1,5 +1,7 @@
 /* Hide FinWise Pro parent menu and move children */
-.vben-sub-menu:has(.vben-sub-menu-content__title:is(:contains("FinWise Pro"), :contains("💎"))) {
+.vben-sub-menu:has(
+  .vben-sub-menu-content__title:is(:contains('FinWise Pro'), :contains('💎'))
+) {
   display: none !important;
 }
 
@@ -9,6 +11,6 @@
 }
 
 /* Mark submenu for hiding */
-.vben-sub-menu[data-hide-finwise="true"] {
+.vben-sub-menu[data-hide-finwise='true'] {
   display: none !important;
 }

@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
-import * as path from 'node:path';
 
-const CSV_FILE = '/Users/fuwuqi/Downloads/Telegram Desktop/控天-控天_完全修正_带分类.csv';
+const CSV_FILE =
+  '/Users/fuwuqi/Downloads/Telegram Desktop/控天-控天_完全修正_带分类.csv';
 const API_URL = 'http://localhost:3000/api/finance/transactions';
 
 interface CSVRow {
@@ -59,11 +59,7 @@ function parseDate(dateStr: string, previousDate: string = ''): string {
       const prevMonth = Number.parseInt(previousDate.split('-')[1]);
 
       // 如果月份从大变小（例如12月->2月，或7月->8月），说明跨年了
-      if (month < prevMonth) {
-        year = prevYear + 1;
-      } else {
-        year = prevYear;
-      }
+      year = month < prevMonth ? prevYear + 1 : prevYear;
     } else if (month >= 8) {
       // 第一条记录，8-12月是2024年
       year = 2024;
@@ -85,11 +81,7 @@ function parseDate(dateStr: string, previousDate: string = ''): string {
       const prevYear = Number.parseInt(previousDate.split('-')[0]);
       const prevMonth = Number.parseInt(previousDate.split('-')[1]);
 
-      if (month < prevMonth) {
-        year = prevYear + 1;
-      } else {
-        year = prevYear;
-      }
+      year = month < prevMonth ? prevYear + 1 : prevYear;
     } else if (month >= 8) {
       year = 2024;
     } else {
@@ -109,12 +101,12 @@ function parseAmount(amountStr: string): number {
   const cleaned = amountStr.trim();
 
   // 如果包含乘号（*或×或x），先处理乘法
-  if (cleaned.match(/[*×x]/)) {
+  if (/[*×x]/.test(cleaned)) {
     // 提取乘法表达式，如 "200*3=600" 或 "200*3"
     const mulMatch = cleaned.match(/(\d+(?:\.\d+)?)\s*[*×x]\s*(\d+(?:\.\d+)?)/);
     if (mulMatch) {
-      const num1 = parseFloat(mulMatch[1]);
-      const num2 = parseFloat(mulMatch[2]);
+      const num1 = Number.parseFloat(mulMatch[1]);
+      const num2 = Number.parseFloat(mulMatch[2]);
       if (!isNaN(num1) && !isNaN(num2)) {
         return num1 * num2;
       }
@@ -126,7 +118,7 @@ function parseAmount(amountStr: string): number {
     const parts = cleaned.split('+');
     let sum = 0;
     for (const part of parts) {
-      const num = parseFloat(part.replace(/[^\d.]/g, ''));
+      const num = Number.parseFloat(part.replaceAll(/[^\d.]/g, ''));
       if (!isNaN(num)) {
         sum += num;
       }
@@ -135,22 +127,22 @@ function parseAmount(amountStr: string): number {
   }
 
   // 否则直接解析
-  return parseFloat(cleaned.replace(/[^\d.]/g, '')) || 0;
+  return Number.parseFloat(cleaned.replaceAll(/[^\d.]/g, '')) || 0;
 }
 
 // 根据分类名称获取分类ID
 function getCategoryIdByName(categoryName: string): number {
   const categoryMap: Record<string, number> = {
-    '工资': 5,
+    工资: 5,
     '佣金/返佣': 6,
-    '分红': 7,
+    分红: 7,
     '服务器/技术': 8,
-    '广告推广': 9,
+    广告推广: 9,
     '软件/工具': 10,
-    '固定资产': 11,
-    '退款': 12,
+    固定资产: 11,
+    退款: 12,
     '借款/转账': 13,
-    '其他支出': 14,
+    其他支出: 14,
   };
 
   return categoryMap[categoryName] || 2; // 默认未分类支出
@@ -158,7 +150,7 @@ function getCategoryIdByName(categoryName: string): number {
 
 // 批量导入
 async function importTransactions() {
-  const content = fs.readFileSync(CSV_FILE, 'utf-8');
+  const content = fs.readFileSync(CSV_FILE, 'utf8');
   const rows = parseCSV(content);
 
   console.log(`共解析到 ${rows.length} 条记录`);
@@ -202,14 +194,16 @@ async function importTransactions() {
 
       if (response.ok) {
         imported++;
-        console.log(`✓ 导入成功 [${imported}/${rows.length}]: ${row.project} - $${amount}`);
+        console.log(
+          `✓ 导入成功 [${imported}/${rows.length}]: ${row.project} - $${amount}`,
+        );
       } else {
         failed++;
         console.error(`✗ 导入失败: ${row.project}`, await response.text());
       }
 
       // 避免请求过快
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
     } catch (error) {
       failed++;
       console.error(`✗ 处理失败: ${row.project}`, error);

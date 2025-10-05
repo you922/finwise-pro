@@ -1,5 +1,4 @@
 import { getQuery } from 'h3';
-
 import { listAccounts } from '~/utils/finance-metadata';
 import { useResponseSuccess } from '~/utils/response';
 

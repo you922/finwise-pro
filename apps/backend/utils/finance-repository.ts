@@ -9,27 +9,27 @@ interface TransactionRow {
   currency: string;
   exchange_rate_to_base: number;
   amount_in_base: number;
-  category_id: number | null;
-  account_id: number | null;
+  category_id: null | number;
+  account_id: null | number;
   transaction_date: string;
-  description: string | null;
-  project: string | null;
-  memo: string | null;
+  description: null | string;
+  project: null | string;
+  memo: null | string;
   created_at: string;
   is_deleted: number;
-  deleted_at: string | null;
+  deleted_at: null | string;
 }
 
 interface TransactionPayload {
   type: string;
   amount: number;
   currency: string;
-  categoryId?: number | null;
-  accountId?: number | null;
+  categoryId?: null | number;
+  accountId?: null | number;
   transactionDate: string;
   description?: string;
-  project?: string | null;
-  memo?: string | null;
+  project?: null | string;
+  memo?: null | string;
   createdAt?: string;
   isDeleted?: boolean;
 }
@@ -41,7 +41,7 @@ function getExchangeRateToBase(currency: string) {
   const stmt = db.prepare(
     `SELECT rate FROM finance_exchange_rates WHERE from_currency = ? AND to_currency = ? ORDER BY date DESC LIMIT 1`,
   );
-  const row = stmt.get(currency, BASE_CURRENCY) as { rate: number } | undefined;
+  const row = stmt.get(currency, BASE_CURRENCY) as undefined | { rate: number };
   return row?.rate ?? 1;
 }
 
@@ -49,7 +49,7 @@ function mapTransaction(row: TransactionRow) {
   return {
     id: row.id,
     userId: 1,
-    type: row.type as 'income' | 'expense' | 'transfer',
+    type: row.type as 'expense' | 'income' | 'transfer',
     amount: row.amount,
     currency: row.currency,
     exchangeRateToBase: row.exchange_rate_to_base,
@@ -66,7 +66,9 @@ function mapTransaction(row: TransactionRow) {
   };
 }
 
-export function fetchTransactions(options: { type?: string; includeDeleted?: boolean } = {}) {
+export function fetchTransactions(
+  options: { includeDeleted?: boolean; type?: string } = {},
+) {
   const clauses: string[] = [];
   const params: Record<string, unknown> = {};
 
@@ -78,7 +80,7 @@ export function fetchTransactions(options: { type?: string; includeDeleted?: boo
     params.type = options.type;
   }
 
-  const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+  const where = clauses.length > 0 ? `WHERE ${clauses.join(' AND ')}` : '';
 
   const stmt = db.prepare<TransactionRow>(
     `SELECT id, type, amount, currency, exchange_rate_to_base, amount_in_base, category_id, account_id, transaction_date, description, project, memo, created_at, is_deleted, deleted_at FROM finance_transactions ${where} ORDER BY transaction_date DESC, id DESC`,
@@ -98,7 +100,10 @@ export function getTransactionById(id: number) {
 export function createTransaction(payload: TransactionPayload) {
   const exchangeRate = getExchangeRateToBase(payload.currency);
   const amountInBase = +(payload.amount * exchangeRate).toFixed(2);
-  const createdAt = payload.createdAt && payload.createdAt.length ? payload.createdAt : new Date().toISOString();
+  const createdAt =
+    payload.createdAt && payload.createdAt.length > 0
+      ? payload.createdAt
+      : new Date().toISOString();
 
   const stmt = db.prepare(
     `INSERT INTO finance_transactions (type, amount, currency, exchange_rate_to_base, amount_in_base, category_id, account_id, transaction_date, description, project, memo, created_at, is_deleted) VALUES (@type, @amount, @currency, @exchangeRateToBase, @amountInBase, @categoryId, @accountId, @transactionDate, @description, @project, @memo, @createdAt, 0)`,
@@ -171,29 +176,35 @@ export function updateTransaction(id: number, payload: TransactionPayload) {
 }
 
 export function softDeleteTransaction(id: number) {
-  const stmt = db.prepare(`UPDATE finance_transactions SET is_deleted = 1, deleted_at = @deletedAt WHERE id = @id`);
+  const stmt = db.prepare(
+    `UPDATE finance_transactions SET is_deleted = 1, deleted_at = @deletedAt WHERE id = @id`,
+  );
   stmt.run({ id, deletedAt: new Date().toISOString() });
   return getTransactionById(id);
 }
 
 export function restoreTransaction(id: number) {
-  const stmt = db.prepare(`UPDATE finance_transactions SET is_deleted = 0, deleted_at = NULL WHERE id = @id`);
+  const stmt = db.prepare(
+    `UPDATE finance_transactions SET is_deleted = 0, deleted_at = NULL WHERE id = @id`,
+  );
   stmt.run({ id });
   return getTransactionById(id);
 }
 
-export function replaceAllTransactions(rows: Array<{
-  type: string;
-  amount: number;
-  currency: string;
-  categoryId: number | null;
-  accountId: number | null;
-  transactionDate: string;
-  description: string;
-  project?: string | null;
-  memo?: string | null;
-  createdAt?: string;
-}>) {
+export function replaceAllTransactions(
+  rows: Array<{
+    accountId: null | number;
+    amount: number;
+    categoryId: null | number;
+    createdAt?: string;
+    currency: string;
+    description: string;
+    memo?: null | string;
+    project?: null | string;
+    transactionDate: string;
+    type: string;
+  }>,
+) {
   db.prepare('DELETE FROM finance_transactions').run();
 
   const insert = db.prepare(
@@ -206,7 +217,7 @@ export function replaceAllTransactions(rows: Array<{
 
   const insertMany = db.transaction((items: Array<any>) => {
     for (const item of items) {
-      const row = getRate.get(item.currency) as { rate: number } | undefined;
+      const row = getRate.get(item.currency) as undefined | { rate: number };
       const rate = row?.rate ?? 1;
       const amountInBase = +(item.amount * rate).toFixed(2);
       insert.run({
@@ -215,7 +226,9 @@ export function replaceAllTransactions(rows: Array<{
         amountInBase,
         project: item.project ?? null,
         memo: item.memo ?? null,
-        createdAt: item.createdAt ?? new Date(`${item.transactionDate}T00:00:00Z`).toISOString(),
+        createdAt:
+          item.createdAt ??
+          new Date(`${item.transactionDate}T00:00:00Z`).toISOString(),
       });
     }
   });
@@ -228,9 +241,9 @@ interface CategoryRow {
   id: number;
   name: string;
   type: string;
-  icon: string | null;
-  color: string | null;
-  user_id: number | null;
+  icon: null | string;
+  color: null | string;
+  user_id: null | number;
   is_active: number;
 }
 
@@ -239,7 +252,7 @@ function mapCategory(row: CategoryRow) {
     id: row.id,
     userId: row.user_id ?? null,
     name: row.name,
-    type: row.type as 'income' | 'expense',
+    type: row.type as 'expense' | 'income',
     icon: row.icon ?? '📝',
     color: row.color ?? '#dfe4ea',
     sortOrder: row.id,
@@ -248,8 +261,10 @@ function mapCategory(row: CategoryRow) {
   };
 }
 
-export function fetchCategories(options: { type?: 'income' | 'expense' } = {}) {
-  const where = options.type ? `WHERE type = @type AND is_active = 1` : 'WHERE is_active = 1';
+export function fetchCategories(options: { type?: 'expense' | 'income' } = {}) {
+  const where = options.type
+    ? `WHERE type = @type AND is_active = 1`
+    : 'WHERE is_active = 1';
   const params = options.type ? { type: options.type } : {};
 
   const stmt = db.prepare<CategoryRow>(

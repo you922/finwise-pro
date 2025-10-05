@@ -1,5 +1,4 @@
 import { getRouterParam } from 'h3';
-
 import { deleteCategoryRecord } from '~/utils/finance-metadata';
 import { useResponseError, useResponseSuccess } from '~/utils/response';
 

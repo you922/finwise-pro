@@ -1,5 +1,4 @@
 import { getQuery } from 'h3';
-
 import { fetchTransactions } from '~/utils/finance-repository';
 import { useResponseSuccess } from '~/utils/response';
 
