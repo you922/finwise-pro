@@ -152,7 +152,7 @@ const analyticsMenus = [
 const financeMenus = [
   {
     name: 'FinanceDashboard',
-    path: '/finance/dashboard',
+    path: '/dashboard-finance',
     component: '/finance/dashboard/index',
     meta: {
       order: 1,
@@ -162,7 +162,7 @@ const financeMenus = [
   },
   {
     name: 'FinanceTransactions',
-    path: '/finance/transactions',
+    path: '/transactions',
     component: '/finance/transactions/index',
     meta: {
       order: 2,
@@ -172,7 +172,7 @@ const financeMenus = [
   },
   {
     name: 'FinanceAccounts',
-    path: '/finance/accounts',
+    path: '/accounts',
     component: '/finance/accounts/index',
     meta: {
       order: 3,
@@ -182,7 +182,7 @@ const financeMenus = [
   },
   {
     name: 'FinanceCategories',
-    path: '/finance/categories',
+    path: '/categories',
     component: '/finance/categories/index',
     meta: {
       order: 4,
@@ -192,7 +192,7 @@ const financeMenus = [
   },
   {
     name: 'FinanceBudgets',
-    path: '/finance/budgets',
+    path: '/budgets',
     component: '/finance/budgets/index',
     meta: {
       order: 5,
@@ -202,7 +202,7 @@ const financeMenus = [
   },
   {
     name: 'ReportsAnalytics',
-    path: '/finance/reports',
+    path: '/reports',
     component: '/finance/reports/index',
     meta: {
       order: 6,
@@ -212,7 +212,7 @@ const financeMenus = [
   },
   {
     name: 'FinanceTools',
-    path: '/finance/tools',
+    path: '/tools',
     component: '/finance/tools/index',
     meta: {
       order: 7,
@@ -222,7 +222,7 @@ const financeMenus = [
   },
   {
     name: 'FinanceSettings',
-    path: '/finance/settings',
+    path: '/fin-settings',
     component: '/finance/settings/index',
     meta: {
       order: 8,
@@ -323,15 +323,30 @@ const createDemosMenus = (role: 'admin' | 'super' | 'user') => {
 
 export const MOCK_MENUS = [
   {
-    menus: [...dashboardMenus, ...analyticsMenus, ...financeMenus, ...createDemosMenus('super')],
+    menus: [
+      ...dashboardMenus,
+      ...analyticsMenus,
+      ...financeMenus,
+      ...createDemosMenus('super'),
+    ],
     username: 'vben',
   },
   {
-    menus: [...dashboardMenus, ...analyticsMenus, ...financeMenus, ...createDemosMenus('admin')],
+    menus: [
+      ...dashboardMenus,
+      ...analyticsMenus,
+      ...financeMenus,
+      ...createDemosMenus('admin'),
+    ],
     username: 'admin',
   },
   {
-    menus: [...dashboardMenus, ...analyticsMenus, ...financeMenus, ...createDemosMenus('user')],
+    menus: [
+      ...dashboardMenus,
+      ...analyticsMenus,
+      ...financeMenus,
+      ...createDemosMenus('user'),
+    ],
     username: 'jack',
   },
 ];
@@ -581,32 +596,95 @@ export interface ExchangeRate {
   toCurrency: string;
   rate: number;
   date: string;
-  source: 'manual' | 'api' | 'system';
+  source: 'api' | 'manual' | 'system';
 }
 
 export const MOCK_EXCHANGE_RATES: ExchangeRate[] = [
   // CNY 作为基准货币
-  { id: 1, fromCurrency: 'CNY', toCurrency: 'CNY', rate: 1.0, date: '2025-10-03', source: 'system' },
-  { id: 2, fromCurrency: 'CNY', toCurrency: 'THB', rate: 5.0, date: '2025-10-03', source: 'api' },
-  { id: 3, fromCurrency: 'CNY', toCurrency: 'USD', rate: 0.14, date: '2025-10-03', source: 'api' },
+  {
+    id: 1,
+    fromCurrency: 'CNY',
+    toCurrency: 'CNY',
+    rate: 1,
+    date: '2025-10-03',
+    source: 'system',
+  },
+  {
+    id: 2,
+    fromCurrency: 'CNY',
+    toCurrency: 'THB',
+    rate: 5,
+    date: '2025-10-03',
+    source: 'api',
+  },
+  {
+    id: 3,
+    fromCurrency: 'CNY',
+    toCurrency: 'USD',
+    rate: 0.14,
+    date: '2025-10-03',
+    source: 'api',
+  },
 
   // THB 换算
-  { id: 4, fromCurrency: 'THB', toCurrency: 'CNY', rate: 0.2, date: '2025-10-03', source: 'api' },
-  { id: 5, fromCurrency: 'THB', toCurrency: 'THB', rate: 1.0, date: '2025-10-03', source: 'system' },
-  { id: 6, fromCurrency: 'THB', toCurrency: 'USD', rate: 0.028, date: '2025-10-03', source: 'api' },
+  {
+    id: 4,
+    fromCurrency: 'THB',
+    toCurrency: 'CNY',
+    rate: 0.2,
+    date: '2025-10-03',
+    source: 'api',
+  },
+  {
+    id: 5,
+    fromCurrency: 'THB',
+    toCurrency: 'THB',
+    rate: 1,
+    date: '2025-10-03',
+    source: 'system',
+  },
+  {
+    id: 6,
+    fromCurrency: 'THB',
+    toCurrency: 'USD',
+    rate: 0.028,
+    date: '2025-10-03',
+    source: 'api',
+  },
 
   // USD 换算
-  { id: 7, fromCurrency: 'USD', toCurrency: 'CNY', rate: 7.14, date: '2025-10-03', source: 'api' },
-  { id: 8, fromCurrency: 'USD', toCurrency: 'THB', rate: 35.7, date: '2025-10-03', source: 'api' },
-  { id: 9, fromCurrency: 'USD', toCurrency: 'USD', rate: 1.0, date: '2025-10-03', source: 'system' },
+  {
+    id: 7,
+    fromCurrency: 'USD',
+    toCurrency: 'CNY',
+    rate: 7.14,
+    date: '2025-10-03',
+    source: 'api',
+  },
+  {
+    id: 8,
+    fromCurrency: 'USD',
+    toCurrency: 'THB',
+    rate: 35.7,
+    date: '2025-10-03',
+    source: 'api',
+  },
+  {
+    id: 9,
+    fromCurrency: 'USD',
+    toCurrency: 'USD',
+    rate: 1,
+    date: '2025-10-03',
+    source: 'system',
+  },
 ];
 
 // 分类
 export interface Category {
   id: number;
-  userId: number | null; // null 表示系统预设
+  userId: null | number; // null 表示系统预设
   name: string;
-  type: 'income' | 'expense';
+  type: 'expense' | 'income';
   icon: string;
   color: string;
   sortOrder: number;
@@ -616,23 +694,173 @@ export interface Category {
 
 export const MOCK_CATEGORIES: Category[] = [
   // 支出分类
-  { id: 1, userId: null, name: '餐饮', type: 'expense', icon: '🍜', color: '#ff6b6b', sortOrder: 1, isSystem: true, isActive: true },
-  { id: 2, userId: null, name: '交通', type: 'expense', icon: '🚗', color: '#4ecdc4', sortOrder: 2, isSystem: true, isActive: true },
-  { id: 3, userId: null, name: '购物', type: 'expense', icon: '🛍️', color: '#95e1d3', sortOrder: 3, isSystem: true, isActive: true },
-  { id: 4, userId: null, name: '娱乐', type: 'expense', icon: '🎮', color: '#f38181', sortOrder: 4, isSystem: true, isActive: true },
-  { id: 5, userId: null, name: '软件订阅', type: 'expense', icon: '💻', color: '#aa96da', sortOrder: 5, isSystem: true, isActive: true },
-  { id: 6, userId: null, name: '投资支出', type: 'expense', icon: '📊', color: '#fcbad3', sortOrder: 6, isSystem: true, isActive: true },
-  { id: 7, userId: null, name: '医疗健康', type: 'expense', icon: '🏥', color: '#a8d8ea', sortOrder: 7, isSystem: true, isActive: true },
-  { id: 8, userId: null, name: '房租房贷', type: 'expense', icon: '🏠', color: '#ffcccc', sortOrder: 8, isSystem: true, isActive: true },
-  { id: 9, userId: null, name: '教育', type: 'expense', icon: '📚', color: '#ffd3b6', sortOrder: 9, isSystem: true, isActive: true },
-  { id: 10, userId: null, name: '其他支出', type: 'expense', icon: '📝', color: '#dfe4ea', sortOrder: 99, isSystem: true, isActive: true },
+  {
+    id: 1,
+    userId: null,
+    name: '餐饮',
+    type: 'expense',
+    icon: '🍜',
+    color: '#ff6b6b',
+    sortOrder: 1,
+    isSystem: true,
+    isActive: true,
+  },
+  {
+    id: 2,
+    userId: null,
+    name: '交通',
+    type: 'expense',
+    icon: '🚗',
+    color: '#4ecdc4',
+    sortOrder: 2,
+    isSystem: true,
+    isActive: true,
+  },
+  {
+    id: 3,
+    userId: null,
+    name: '购物',
+    type: 'expense',
+    icon: '🛍️',
+    color: '#95e1d3',
+    sortOrder: 3,
+    isSystem: true,
+    isActive: true,
+  },
+  {
+    id: 4,
+    userId: null,
+    name: '娱乐',
+    type: 'expense',
+    icon: '🎮',
+    color: '#f38181',
+    sortOrder: 4,
+    isSystem: true,
+    isActive: true,
+  },
+  {
+    id: 5,
+    userId: null,
+    name: '软件订阅',
+    type: 'expense',
+    icon: '💻',
+    color: '#aa96da',
+    sortOrder: 5,
+    isSystem: true,
+    isActive: true,
+  },
+  {
+    id: 6,
+    userId: null,
+    name: '投资支出',
+    type: 'expense',
+    icon: '📊',
+    color: '#fcbad3',
+    sortOrder: 6,
+    isSystem: true,
+    isActive: true,
+  },
+  {
+    id: 7,
+    userId: null,
+    name: '医疗健康',
+    type: 'expense',
+    icon: '🏥',
+    color: '#a8d8ea',
+    sortOrder: 7,
+    isSystem: true,
+    isActive: true,
+  },
+  {
+    id: 8,
+    userId: null,
+    name: '房租房贷',
+    type: 'expense',
+    icon: '🏠',
+    color: '#ffcccc',
+    sortOrder: 8,
+    isSystem: true,
+    isActive: true,
+  },
+  {
+    id: 9,
+    userId: null,
+    name: '教育',
+    type: 'expense',
+    icon: '📚',
+    color: '#ffd3b6',
+    sortOrder: 9,
+    isSystem: true,
+    isActive: true,
+  },
+  {
+    id: 10,
+    userId: null,
+    name: '其他支出',
+    type: 'expense',
+    icon: '📝',
+    color: '#dfe4ea',
+    sortOrder: 99,
+    isSystem: true,
+    isActive: true,
+  },
 
   // 收入分类
-  { id: 11, userId: null, name: '工资', type: 'income', icon: '💼', color: '#38ada9', sortOrder: 1, isSystem: true, isActive: true },
-  { id: 12, userId: null, name: '奖金', type: 'income', icon: '🎁', color: '#78e08f', sortOrder: 2, isSystem: true, isActive: true },
-  { id: 13, userId: null, name: '投资收益', type: 'income', icon: '📈', color: '#079992', sortOrder: 3, isSystem: true, isActive: true },
-  { id: 14, userId: null, name: '副业收入', type: 'income', icon: '💡', color: '#60a3bc', sortOrder: 4, isSystem: true, isActive: true },
-  { id: 15, userId: null, name: '其他收入', type: 'income', icon: '💰', color: '#82ccdd', sortOrder: 99, isSystem: true, isActive: true },
+  {
+    id: 11,
+    userId: null,
+    name: '工资',
+    type: 'income',
+    icon: '💼',
+    color: '#38ada9',
+    sortOrder: 1,
+    isSystem: true,
+    isActive: true,
+  },
+  {
+    id: 12,
+    userId: null,
+    name: '奖金',
+    type: 'income',
+    icon: '🎁',
+    color: '#78e08f',
+    sortOrder: 2,
+    isSystem: true,
+    isActive: true,
+  },
+  {
+    id: 13,
+    userId: null,
+    name: '投资收益',
+    type: 'income',
+    icon: '📈',
+    color: '#079992',
+    sortOrder: 3,
+    isSystem: true,
+    isActive: true,
+  },
+  {
+    id: 14,
+    userId: null,
+    name: '副业收入',
+    type: 'income',
+    icon: '💡',
+    color: '#60a3bc',
+    sortOrder: 4,
+    isSystem: true,
+    isActive: true,
+  },
+  {
+    id: 15,
+    userId: null,
+    name: '其他收入',
+    type: 'income',
+    icon: '💰',
+    color: '#82ccdd',
+    sortOrder: 99,
+    isSystem: true,
+    isActive: true,
+  },
 ];
 
 // 账户
@@ -640,7 +868,14 @@ export interface Account {
   id: number;
   userId: number;
   name: string;
-  type: 'cash' | 'bank' | 'alipay' | 'wechat' | 'virtual_wallet' | 'investment' | 'credit_card';
+  type:
+    | 'alipay'
+    | 'bank'
+    | 'cash'
+    | 'credit_card'
+    | 'investment'
+    | 'virtual_wallet'
+    | 'wechat';
   currency: string;
   balance: number;
   icon: string;
@@ -650,40 +885,160 @@ export interface Account {
 
 export const MOCK_ACCOUNTS: Account[] = [
   // CNY 账户
-  { id: 1, userId: 1, name: '支付宝', type: 'alipay', currency: 'CNY', balance: 5280.50, icon: '💙', color: '#1677ff', isActive: true },
-  { id: 2, userId: 1, name: '微信钱包', type: 'wechat', currency: 'CNY', balance: 1520.30, icon: '💚', color: '#07c160', isActive: true },
-  { id: 3, userId: 1, name: '中国银行', type: 'bank', currency: 'CNY', balance: 12500.00, icon: '🏦', color: '#c41e3a', isActive: true },
-  { id: 4, userId: 1, name: '人民币现金', type: 'cash', currency: 'CNY', balance: 800.00, icon: '💵', color: '#52c41a', isActive: true },
+  {
+    id: 1,
+    userId: 1,
+    name: '支付宝',
+    type: 'alipay',
+    currency: 'CNY',
+    balance: 5280.5,
+    icon: '💙',
+    color: '#1677ff',
+    isActive: true,
+  },
+  {
+    id: 2,
+    userId: 1,
+    name: '微信钱包',
+    type: 'wechat',
+    currency: 'CNY',
+    balance: 1520.3,
+    icon: '💚',
+    color: '#07c160',
+    isActive: true,
+  },
+  {
+    id: 3,
+    userId: 1,
+    name: '中国银行',
+    type: 'bank',
+    currency: 'CNY',
+    balance: 12_500,
+    icon: '🏦',
+    color: '#c41e3a',
+    isActive: true,
+  },
+  {
+    id: 4,
+    userId: 1,
+    name: '人民币现金',
+    type: 'cash',
+    currency: 'CNY',
+    balance: 800,
+    icon: '💵',
+    color: '#52c41a',
+    isActive: true,
+  },
 
   // THB 账户
-  { id: 5, userId: 1, name: '泰铢现金', type: 'cash', currency: 'THB', balance: 15000.00, icon: '💵', color: '#faad14', isActive: true },
-  { id: 6, userId: 1, name: '泰国银行', type: 'bank', currency: 'THB', balance: 48000.00, icon: '🏦', color: '#722ed1', isActive: true },
+  {
+    id: 5,
+    userId: 1,
+    name: '泰铢现金',
+    type: 'cash',
+    currency: 'THB',
+    balance: 15_000,
+    icon: '💵',
+    color: '#faad14',
+    isActive: true,
+  },
+  {
+    id: 6,
+    userId: 1,
+    name: '泰国银行',
+    type: 'bank',
+    currency: 'THB',
+    balance: 48_000,
+    icon: '🏦',
+    color: '#722ed1',
+    isActive: true,
+  },
 
   // USD 账户
-  { id: 7, userId: 1, name: '美金现金', type: 'cash', currency: 'USD', balance: 500.00, icon: '💵', color: '#13c2c2', isActive: true },
-  { id: 8, userId: 1, name: 'PayPal', type: 'bank', currency: 'USD', balance: 1250.00, icon: '💳', color: '#0070ba', isActive: true },
+  {
+    id: 7,
+    userId: 1,
+    name: '美金现金',
+    type: 'cash',
+    currency: 'USD',
+    balance: 500,
+    icon: '💵',
+    color: '#13c2c2',
+    isActive: true,
+  },
+  {
+    id: 8,
+    userId: 1,
+    name: 'PayPal',
+    type: 'bank',
+    currency: 'USD',
+    balance: 1250,
+    icon: '💳',
+    color: '#0070ba',
+    isActive: true,
+  },
 
   // 虚拟钱包
-  { id: 9, userId: 1, name: 'USDT钱包', type: 'virtual_wallet', currency: 'USD', balance: 3000.00, icon: '💎', color: '#26a17b', isActive: true },
-  { id: 10, userId: 1, name: 'BTC钱包', type: 'virtual_wallet', currency: 'USD', balance: 0.05, icon: '₿', color: '#f7931a', isActive: true },
+  {
+    id: 9,
+    userId: 1,
+    name: 'USDT钱包',
+    type: 'virtual_wallet',
+    currency: 'USD',
+    balance: 3000,
+    icon: '💎',
+    color: '#26a17b',
+    isActive: true,
+  },
+  {
+    id: 10,
+    userId: 1,
+    name: 'BTC钱包',
+    type: 'virtual_wallet',
+    currency: 'USD',
+    balance: 0.05,
+    icon: '₿',
+    color: '#f7931a',
+    isActive: true,
+  },
 
   // 投资账户
-  { id: 11, userId: 1, name: '证券账户', type: 'investment', currency: 'CNY', balance: 25000.00, icon: '📊', color: '#eb2f96', isActive: true },
+  {
+    id: 11,
+    userId: 1,
+    name: '证券账户',
+    type: 'investment',
+    currency: 'CNY',
+    balance: 25_000,
+    icon: '📊',
+    color: '#eb2f96',
+    isActive: true,
+  },
 
   // 信用卡
-  { id: 12, userId: 1, name: '招商银行信用卡', type: 'credit_card', currency: 'CNY', balance: -3500.00, icon: '💳', color: '#f5222d', isActive: true },
+  {
+    id: 12,
+    userId: 1,
+    name: '招商银行信用卡',
+    type: 'credit_card',
+    currency: 'CNY',
+    balance: -3500,
+    icon: '💳',
+    color: '#f5222d',
+    isActive: true,
+  },
 ];
 
 // 交易记录
 export interface Transaction {
   id: number;
   userId: number;
-  type: 'income' | 'expense' | 'transfer';
+  type: 'expense' | 'income' | 'transfer';
   amount: number;
   currency: string;
   exchangeRateToBase: number;
   amountInBase: number;
-  categoryId: number | null;
+  categoryId: null | number;
   accountId: number;
   transactionDate: string;
   description: string;
@@ -696,7 +1051,7 @@ interface TransactionSeed {
   type: Transaction['type'];
   amount: number;
   currency: string;
-  categoryId: number | null;
+  categoryId: null | number;
   accountId: number;
   transactionDate: string;
   description: string;
@@ -716,7 +1071,7 @@ function normalizeAmount(value: number) {
 const TRANSACTION_SEEDS: TransactionSeed[] = [
   {
     type: 'income',
-    amount: 12800,
+    amount: 12_800,
     currency: 'CNY',
     categoryId: 11,
     accountId: 3,
@@ -815,7 +1170,7 @@ const TRANSACTION_SEEDS: TransactionSeed[] = [
   },
   {
     type: 'income',
-    amount: 12650,
+    amount: 12_650,
     currency: 'CNY',
     categoryId: 11,
     accountId: 3,
@@ -896,7 +1251,7 @@ const TRANSACTION_SEEDS: TransactionSeed[] = [
   },
   {
     type: 'income',
-    amount: 12580,
+    amount: 12_580,
     currency: 'CNY',
     categoryId: 11,
     accountId: 3,
@@ -986,7 +1341,7 @@ const TRANSACTION_SEEDS: TransactionSeed[] = [
   },
   {
     type: 'income',
-    amount: 12480,
+    amount: 12_480,
     currency: 'CNY',
     categoryId: 11,
     accountId: 3,
@@ -1058,25 +1413,27 @@ const TRANSACTION_SEEDS: TransactionSeed[] = [
   },
 ];
 
-export const MOCK_TRANSACTIONS: Transaction[] = TRANSACTION_SEEDS.map((seed, index) => {
-  const exchangeRate = getExchangeRateToBase(seed.currency);
-  const amountInBase = normalizeAmount(seed.amount * exchangeRate);
+export const MOCK_TRANSACTIONS: Transaction[] = TRANSACTION_SEEDS.map(
+  (seed, index) => {
+    const exchangeRate = getExchangeRateToBase(seed.currency);
+    const amountInBase = normalizeAmount(seed.amount * exchangeRate);
 
-  return {
-    id: index + 1,
-    userId: 1,
-    type: seed.type,
-    amount: normalizeAmount(seed.amount),
-    currency: seed.currency,
-    exchangeRateToBase: normalizeAmount(exchangeRate),
-    amountInBase,
-    categoryId: seed.categoryId,
-    accountId: seed.accountId,
-    transactionDate: seed.transactionDate,
-    description: seed.description,
-    createdAt: `${seed.transactionDate}T09:00:00.000Z`,
-  };
-});
+    return {
+      id: index + 1,
+      userId: 1,
+      type: seed.type,
+      amount: normalizeAmount(seed.amount),
+      currency: seed.currency,
+      exchangeRateToBase: normalizeAmount(exchangeRate),
+      amountInBase,
+      categoryId: seed.categoryId,
+      accountId: seed.accountId,
+      transactionDate: seed.transactionDate,
+      description: seed.description,
+      createdAt: `${seed.transactionDate}T09:00:00.000Z`,
+    };
+  },
+);
 
 // 预算管理
 export interface Budget {
@@ -1090,7 +1447,7 @@ export interface Budget {
   remaining: number;
   percentage: number;
   currency: string;
-  period: 'monthly' | 'weekly' | 'quarterly' | 'yearly';
+  period: 'monthly' | 'quarterly' | 'weekly' | 'yearly';
   alertThreshold: number;
   description?: string;
   autoRenew: boolean;
